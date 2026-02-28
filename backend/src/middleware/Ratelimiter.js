@@ -1,4 +1,4 @@
-const rateLimit = require('express-rate-limit');
+import rateLimit from 'express-rate-limit';
 
 // General API rate limit
 const apiLimiter = rateLimit({
@@ -31,4 +31,4 @@ const sensitiveActionLimiter = rateLimit({
   message: { success: false, message: 'Too many attempts. Please try again in an hour.' },
 });
 
-module.exports = { apiLimiter, loginLimiter, registerLimiter, sensitiveActionLimiter };
+export { apiLimiter, loginLimiter, registerLimiter, sensitiveActionLimiter };

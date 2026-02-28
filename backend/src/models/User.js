@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 // ─────────────────────────────────────────────────────────────
 // Constants
@@ -252,4 +252,4 @@ userSchema.statics.ROLES = ROLES;
 userSchema.statics.MODES = MODES;
 userSchema.statics.ACCOUNT_STATUS = ACCOUNT_STATUS;
 
-module.exports = mongoose.model('User', userSchema);
+export default mongoose.model('User', userSchema);

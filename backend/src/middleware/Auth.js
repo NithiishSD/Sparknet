@@ -1,5 +1,5 @@
-const { verifyAccessToken } = require('../utils/jwt');
-const User = require('../models/User');
+import { verifyAccessToken } from '../utils/JWT.js';
+import User from '../models/User.js';
 
 const { ROLES, MODES, ACCOUNT_STATUS } = User;
 
@@ -173,7 +173,7 @@ const requireOwnerOrAdmin = (paramName = 'id') => {
   };
 };
 
-module.exports = {
+export {
   protect,
   authorize,
   adminOnly,

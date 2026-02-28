@@ -1,3 +1,3 @@
 // Admin module entry point
-const adminRoutes = require('./routes/adminRoutes');
-module.exports = { adminRoutes };
+import adminRoutes from './routes/adminrouter.js';
+export { adminRoutes };

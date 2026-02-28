@@ -1,12 +1,12 @@
-const User = require('../../models/User');
-const { sendAccountStatusEmail } = require('../../utils/email');
+import User from '../../models/User.js';
+import { sendAccountStatusEmail } from '../../utils/Email.js';
 
 const { ACCOUNT_STATUS, ROLES, MODES } = User;
 
 // ─────────────────────────────────────────────────────────────
 // @route   GET /api/admin/users
 // ─────────────────────────────────────────────────────────────
-exports.getUsers = async (req, res) => {
+export const getUsers = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -48,7 +48,7 @@ exports.getUsers = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   GET /api/admin/users/:id
 // ─────────────────────────────────────────────────────────────
-exports.getUser = async (req, res) => {
+export const getUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
       .populate('guardianId', 'username email')
@@ -72,7 +72,7 @@ exports.getUser = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   PATCH /api/admin/users/:id/status
 // ─────────────────────────────────────────────────────────────
-exports.updateUserStatus = async (req, res) => {
+export const updateUserStatus = async (req, res) => {
   try {
     const { status, reason } = req.body;
     if (!Object.values(ACCOUNT_STATUS).includes(status)) {
@@ -104,7 +104,7 @@ exports.updateUserStatus = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/admin/users/:id/force-logout
 // ─────────────────────────────────────────────────────────────
-exports.forceLogout = async (req, res) => {
+export const forceLogout = async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.params.id, { $set: { sessions: [] } });
     res.json({ success: true, message: 'All user sessions cleared' });
@@ -116,7 +116,7 @@ exports.forceLogout = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   GET /api/admin/users/:id/activity
 // ─────────────────────────────────────────────────────────────
-exports.getUserActivity = async (req, res) => {
+export const getUserActivity = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select(
       'username loginHistory sessions lastLoginAt lastLoginIp role mode'
@@ -144,7 +144,7 @@ exports.getUserActivity = async (req, res) => {
 // @route   PATCH /api/admin/users/:id/mode
 // @desc    Toggle or set mode (normal / youth) for any user
 // ─────────────────────────────────────────────────────────────
-exports.setUserMode = async (req, res) => {
+export const setUserMode = async (req, res) => {
   try {
     const { mode } = req.body;
     if (!Object.values(MODES).includes(mode)) {
@@ -168,7 +168,7 @@ exports.setUserMode = async (req, res) => {
 // @route   GET /api/admin/stats
 // @desc    Platform overview stats
 // ─────────────────────────────────────────────────────────────
-exports.getStats = async (req, res) => {
+export const getStats = async (req, res) => {
   try {
     const [totalUsers, totalChildren, activeUsers, bannedUsers, guardians] = await Promise.all([
       User.countDocuments({ role: ROLES.USER }),

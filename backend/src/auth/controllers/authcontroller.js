@@ -1,12 +1,12 @@
-const crypto = require('crypto');
-const User = require('../../models/User');
-const { generateAccessToken, generateRefreshToken, hashRefreshToken } = require('../../utils/jwt');
-const { validatePassword, validateAge, isMinor } = require('../../utils/validators');
-const {
+import crypto from 'crypto';
+import User from '../../models/User.js';
+import { generateAccessToken, generateRefreshToken, hashRefreshToken } from '../../utils/Jwt.js';
+import { validatePassword, validateAge, isMinor } from '../../utils/Validators.js';
+import {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendGuardianInviteEmail,
-} = require('../../utils/email');
+} from '../../utils/Email.js';
 
 const { ROLES, MODES, ACCOUNT_STATUS } = User;
 
@@ -68,7 +68,7 @@ const sendTokenResponse = async (user, statusCode, res, req) => {
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/auth/register
 // ─────────────────────────────────────────────────────────────
-exports.register = async (req, res) => {
+export const register = async (req, res) => {
   try {
     const { username, email, password, dateOfBirth, guardianEmail, termsAccepted } = req.body;
 
@@ -154,7 +154,7 @@ exports.register = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/auth/login
 // ─────────────────────────────────────────────────────────────
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -215,7 +215,7 @@ exports.login = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/auth/refresh
 // ─────────────────────────────────────────────────────────────
-exports.refreshToken = async (req, res) => {
+export const refreshToken = async (req, res) => {
   try {
     const rawToken = req.cookies?.refreshToken;
     if (!rawToken) return res.status(401).json({ success: false, message: 'No refresh token' });
@@ -239,7 +239,7 @@ exports.refreshToken = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/auth/logout
 // ─────────────────────────────────────────────────────────────
-exports.logout = async (req, res) => {
+export const logout = async (req, res) => {
   try {
     const rawToken = req.cookies?.refreshToken;
     if (rawToken) {
@@ -255,7 +255,7 @@ exports.logout = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/auth/logout-all
 // ─────────────────────────────────────────────────────────────
-exports.logoutAll = async (req, res) => {
+export const logoutAll = async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.user._id, { $set: { sessions: [] } });
     res.clearCookie('accessToken').clearCookie('refreshToken').json({ success: true, message: 'Logged out from all devices' });
@@ -267,7 +267,7 @@ exports.logoutAll = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   GET /api/auth/verify-email/:token
 // ─────────────────────────────────────────────────────────────
-exports.verifyEmail = async (req, res) => {
+export const verifyEmail = async (req, res) => {
   try {
     const hashed = crypto.createHash('sha256').update(req.params.token).digest('hex');
     const user = await User.findOne({
@@ -296,7 +296,7 @@ exports.verifyEmail = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/auth/resend-verification
 // ─────────────────────────────────────────────────────────────
-exports.resendVerification = async (req, res) => {
+export const resendVerification = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email }).select('+emailVerificationToken +emailVerificationExpires');
@@ -315,7 +315,7 @@ exports.resendVerification = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/auth/forgot-password
 // ─────────────────────────────────────────────────────────────
-exports.forgotPassword = async (req, res) => {
+export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     res.json({ success: true, message: 'If that email exists, a reset link was sent' });
@@ -332,7 +332,7 @@ exports.forgotPassword = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/auth/reset-password/:token
 // ─────────────────────────────────────────────────────────────
-exports.resetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
   try {
     const { password } = req.body;
     const hashed = crypto.createHash('sha256').update(req.params.token).digest('hex');
@@ -360,7 +360,7 @@ exports.resetPassword = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // @route   POST /api/auth/change-password
 // ─────────────────────────────────────────────────────────────
-exports.changePassword = async (req, res) => {
+export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const user = await User.findById(req.user._id).select('+password');
@@ -379,10 +379,7 @@ exports.changePassword = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// @route   GET /api/auth/me
-// ─────────────────────────────────────────────────────────────
-exports.getMe = async (req, res) => {
+export const getMe = async (req, res) => {
   const user = req.user;
   const isGuardian = user.role === ROLES.USER && (user.childLinks?.length || 0) > 0;
 

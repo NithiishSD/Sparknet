@@ -1,20 +1,16 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-app.get("/", (req, res) => {
-  res.send("Backend is running 🚀");
-});
+import 'dotenv/config';
+import app from './app.js';
+import connectDB from './config/db.js';
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log(`\n Auth Server running on port ${PORT}`);
+    console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗Health check: http://localhost:${PORT}/api/health\n`);
+  });
+};
+
+startServer();

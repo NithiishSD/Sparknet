@@ -1,6 +1,6 @@
-const crypto = require('crypto');
-const User = require('../../models/User');
-const { sendGuardianInviteEmail, sendAccountStatusEmail } = require('../../utils/email');
+import crypto from 'crypto';
+import User from '../../models/User.js';
+import { sendGuardianInviteEmail, sendAccountStatusEmail } from '../../utils/Email.js';
 
 const { ROLES, ACCOUNT_STATUS } = User;
 
@@ -14,7 +14,7 @@ const { ROLES, ACCOUNT_STATUS } = User;
 // simply by approving this child link. No role change occurs.
 // After this, isGuardian = true is computed from childLinks.length > 0.
 // ─────────────────────────────────────────────────────────────
-exports.approveChild = async (req, res) => {
+export const approveChild = async (req, res) => {
   try {
     const hashed = crypto.createHash('sha256').update(req.params.token).digest('hex');
 
@@ -84,7 +84,7 @@ exports.approveChild = async (req, res) => {
 // @route   GET /api/guardian/children
 // @access  Private (requires guardian capability)
 // ─────────────────────────────────────────────────────────────
-exports.getChildren = async (req, res) => {
+export const getChildren = async (req, res) => {
   try {
     const guardian = await User.findById(req.user._id).populate(
       'childLinks.childId',
@@ -113,7 +113,7 @@ exports.getChildren = async (req, res) => {
 // Guardian can set per-child: messaging, friend requests,
 // content level, screen time limits — all without role changes.
 // ─────────────────────────────────────────────────────────────
-exports.updateChildControls = async (req, res) => {
+export const updateChildControls = async (req, res) => {
   try {
     const { messagingAllowed, friendRequestsAllowed, contentLevel, screenTimeLimitMinutes, screenTimeEnabled } = req.body;
 
@@ -153,7 +153,7 @@ exports.updateChildControls = async (req, res) => {
 // @route   PATCH /api/guardian/children/:childId/status
 // @access  Private (requires guardian capability)
 // ─────────────────────────────────────────────────────────────
-exports.setChildStatus = async (req, res) => {
+export const setChildStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const allowed = [ACCOUNT_STATUS.ACTIVE, ACCOUNT_STATUS.SUSPENDED];
@@ -194,7 +194,7 @@ exports.setChildStatus = async (req, res) => {
 // @route   DELETE /api/guardian/children/:childId
 // @access  Private (requires guardian capability)
 // ─────────────────────────────────────────────────────────────
-exports.unlinkChild = async (req, res) => {
+export const unlinkChild = async (req, res) => {
   try {
     const guardian = await User.findById(req.user._id);
     const originalLength = guardian.childLinks.length;
@@ -234,7 +234,7 @@ exports.unlinkChild = async (req, res) => {
 // @route   GET /api/guardian/children/:childId/activity
 // @access  Private (requires guardian capability)
 // ─────────────────────────────────────────────────────────────
-exports.getChildActivity = async (req, res) => {
+export const getChildActivity = async (req, res) => {
   try {
     const guardian = await User.findById(req.user._id);
     const isLinked = guardian.childLinks.some(
@@ -270,7 +270,7 @@ exports.getChildActivity = async (req, res) => {
 // @route   POST /api/guardian/resend-invite
 // @access  Public
 // ─────────────────────────────────────────────────────────────
-exports.resendGuardianInvite = async (req, res) => {
+export const resendGuardianInvite = async (req, res) => {
   try {
     const { childId, guardianEmail } = req.body;
     const child = await User.findById(childId).select('+guardianInviteToken +guardianInviteExpires');

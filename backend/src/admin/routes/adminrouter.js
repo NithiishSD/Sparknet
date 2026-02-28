@@ -1,10 +1,10 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
   getUsers, getUser, updateUserStatus,
   forceLogout, getUserActivity, setUserMode, getStats,
-} = require('../controllers/admincontroller');
-const { protect, adminOnly } = require('../../middleware/auth');
+} from '../controller/admincontroller.js';
+import { protect, adminOnly } from '../../middleware/Auth.js';
 
 router.use(protect, adminOnly);
 
@@ -16,4 +16,4 @@ router.post('/users/:id/force-logout', forceLogout);
 router.get('/users/:id/activity', getUserActivity);
 router.patch('/users/:id/mode', setUserMode);
 
-module.exports = router;
+export default router;

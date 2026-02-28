@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
   approveChild,
   getChildren,
   updateChildControls,
@@ -8,8 +8,8 @@ const {
   unlinkChild,
   getChildActivity,
   resendGuardianInvite,
-} = require('../controllers/guardiancontroller');
-const { protect, requireGuardianCapability, requireEmailVerified } = require('../../middleware/auth');
+} from '../controller/guardiancontroller.js';
+import { protect, requireGuardianCapability, requireEmailVerified } from '../../middleware/Auth.js';
 
 // Public: guardian approves child via email link
 router.post('/approve/:token', approveChild);
@@ -24,4 +24,4 @@ router.patch('/children/:childId/status', setChildStatus);
 router.delete('/children/:childId', unlinkChild);
 router.get('/children/:childId/activity', getChildActivity);
 
-module.exports = router;
+export default router;

@@ -1,3 +1,3 @@
 // Auth module entry point
-const authRoutes = require('./routes/authroutes');
-module.exports = { authRoutes };
+import authRoutes from './routes/authroutes.js';
+export { authRoutes };
