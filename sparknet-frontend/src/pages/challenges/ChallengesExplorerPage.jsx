@@ -58,7 +58,7 @@ export const ChallengesExplorerPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredChallenges.map(challenge => (
-          <ChallengeCard key={challenge.id} challenge={challenge} isJoined={false} />
+          <ChallengeCard key={challenge._id || challenge.id} challenge={challenge} isJoined={false} />
         ))}
       </div>
     </div>

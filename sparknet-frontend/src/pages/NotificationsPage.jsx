@@ -55,7 +55,7 @@ export const NotificationsPage = () => {
       <div className="space-y-3">
         {notifications.map(notification => (
            <div 
-            key={notification.id} 
+            key={notification._id || notification.id} 
             className={`spark-card p-4 flex gap-4 transition-all ${!notification.isRead ? 'border-spark-500/50 bg-spark-500/5' : 'opacity-70'}`}
           >
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${!notification.isRead ? 'bg-spark-500/20 text-spark-400' : 'bg-dark-600 text-gray-400'}`}>

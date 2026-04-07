@@ -19,11 +19,11 @@ export const PostCard = ({ post, onLike, onReport }) => {
 
     try {
       if (originalLiked) {
-        await postApi.unlikePost(post.id);
+        await postApi.unlikePost(post._id || post.id);
       } else {
-        await postApi.likePost(post.id);
+        await postApi.likePost(post._id || post.id);
       }
-      onLike && onLike(post.id);
+      onLike && onLike(post._id || post.id);
     } catch (err) {
       // Rollback on error
       setIsLiked(originalLiked);
@@ -46,7 +46,7 @@ export const PostCard = ({ post, onLike, onReport }) => {
           </div>
         </Link>
         <button 
-          onClick={() => onReport && onReport(post.id)}
+          onClick={() => onReport && onReport(post._id || post.id)}
           className="text-gray-500 hover:text-red-400 p-2 rounded-full hover:bg-dark-600 transition-colors"
           title="Report Post"
         >
@@ -56,7 +56,7 @@ export const PostCard = ({ post, onLike, onReport }) => {
 
       {/* Post Content */}
       <div className="p-4">
-        <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+        <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{post.content_text || post.content}</p>
         {post.mediaUrl && (
           <div className="mt-4 rounded-xl overflow-hidden border border-dark-600">
             <img src={post.mediaUrl} alt="Post content" className="w-full h-auto object-cover max-h-96" />
@@ -92,7 +92,7 @@ export const PostCard = ({ post, onLike, onReport }) => {
       {/* Comments Section */}
       {showComments && (
         <div className="bg-dark-800 border-t border-dark-600 p-4">
-          <CommentSection postId={post.id} initialComments={post.comments} />
+          <CommentSection postId={post._id || post.id} initialComments={post.comments} />
         </div>
       )}
     </div>
@@ -145,7 +145,7 @@ export const CommentSection = ({ postId, initialComments = [] }) => {
 
       <div className="space-y-3 mt-4">
         {comments.map(comment => (
-          <div key={comment.id} className="flex gap-3 animate-fade-in">
+          <div key={comment._id || comment.id} className="flex gap-3 animate-fade-in">
             <div className="w-8 h-8 rounded-full bg-dark-600 flex items-center justify-center text-xs text-white shrink-0">
               {comment.authorName?.[0]}
             </div>

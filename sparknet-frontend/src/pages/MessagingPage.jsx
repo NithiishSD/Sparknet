@@ -68,8 +68,8 @@ export const MessagingPage = () => {
             </div>
           ) : (
             messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.senderId === user.id ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[70%] p-3 rounded-2xl ${msg.senderId === user.id ? 'bg-spark-500 text-white rounded-tr-none' : 'bg-dark-700 text-gray-200 rounded-tl-none border border-dark-600'}`}>
+              <div key={i} className={`flex ${msg.senderId === (user._id || user.id) ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[70%] p-3 rounded-2xl ${msg.senderId === (user._id || user.id) ? 'bg-spark-500 text-white rounded-tr-none' : 'bg-dark-700 text-gray-200 rounded-tl-none border border-dark-600'}`}>
                   <p className="text-sm">{msg.content}</p>
                   <p className="text-[10px] opacity-50 mt-1 text-right">
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

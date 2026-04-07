@@ -48,7 +48,7 @@ export const LoginPage = () => {
     setGoogleLoading(true);
     
     // Point this EXACTLY to your backend route that triggers Passport
-    const backendUrl = import.meta.env.API_URL || 'http://localhost:5000';
+    const backendUrl =  'https://sparknet-backend.onrender.com';
     window.location.href = `${backendUrl}/api/oauth/google`;
   };
   

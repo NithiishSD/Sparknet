@@ -34,7 +34,7 @@ export const ChallengeCard = ({ challenge, isJoined }) => (
       <div className="space-y-4">
         <ProgressBar progress={challenge.progress || 0} label="My Progress" />
         <Link 
-          to={`/challenges/${challenge.id}`}
+          to={`/challenges/${challenge._id || challenge.id}`}
           className="block text-center w-full py-2 rounded-xl bg-dark-700 border border-dark-500 text-sm font-display font-600 text-white hover:border-spark-500 hover:text-spark-400 transition-colors"
         >
           View Details
@@ -42,7 +42,7 @@ export const ChallengeCard = ({ challenge, isJoined }) => (
       </div>
     ) : (
       <Link 
-        to={`/challenges/${challenge.id}`}
+        to={`/challenges/${challenge._id || challenge.id}`}
         className="block text-center w-full py-2 rounded-xl bg-spark-600 hover:bg-spark-500 hover:shadow-lg hover:shadow-spark-500/20 text-sm font-display font-600 text-white transition-all"
       >
         Join Challenge
@@ -64,7 +64,7 @@ export const LeaderboardTable = ({ entries }) => (
       <tbody>
         {entries.map((entry, idx) => (
           <tr 
-            key={entry.id} 
+            key={entry._id || entry.id} 
             className="border-b border-dark-600/50 hover:bg-dark-700/30 transition-colors"
           >
             <td className="px-6 py-4">
