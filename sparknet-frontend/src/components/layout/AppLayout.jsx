@@ -4,20 +4,27 @@ import { Sidebar } from './Sidebar';
 import { Toaster } from 'react-hot-toast';
 
 export const AppLayout = () => (
-  <div className="min-h-screen bg-dark-900 flex flex-col">
+  <div className="bg-background text-on-background min-h-screen overflow-hidden">
     <Navbar />
-    <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex gap-8">
+    <div className="flex pt-16 h-screen overflow-hidden">
       <Sidebar />
-      <main className="flex-1 w-full min-w-0">
+      <main className="flex-1 ml-0 lg:ml-64 flex overflow-y-auto flex-col">
         <Outlet />
       </main>
     </div>
     <Toaster
       position="top-right"
       toastOptions={{
-        style: { background: '#1a1a24', color: '#e2e2f0', border: '1px solid #2e2e3e', fontFamily: 'DM Sans' },
-        success: { iconTheme: { primary: '#f97316', secondary: '#0a0a0f' } },
+        style: { 
+          background: '#171f33', 
+          color: '#dae2fd', 
+          border: '1px solid rgba(140, 144, 159, 0.3)', 
+          fontFamily: 'Inter, sans-serif' 
+        },
+        success: { iconTheme: { primary: '#adc6ff', secondary: '#171f33' } },
+        error:   { iconTheme: { primary: '#ffb4ab', secondary: '#171f33' } }
       }}
     />
   </div>
 );
+

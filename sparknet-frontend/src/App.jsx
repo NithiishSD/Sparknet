@@ -19,6 +19,8 @@ import { ResendVerificationPage } from './pages/auth/ResendVerificationPage';
 // App pages
 import { DashboardPage } from './pages/DashboardPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { PublicProfilePage } from './pages/PublicProfilePage';
+import { SearchPage } from './pages/SearchPage';
 import EditProfile from './pages/EditProfile';
 import { ChangePasswordPage } from './pages/ChangePasswordPage';
 import { HomeFeedPage } from './pages/HomeFeedPage';
@@ -59,13 +61,15 @@ export default function App() {
 
         {/* ── Protected App Routes ── */}
         <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard" element={<Navigate to="/feed" replace />} />
           <Route path="/feed" element={<HomeFeedPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/challenges" element={<ChallengesExplorerPage />} />
           <Route path="/challenges/:id" element={<ChallengeDetailsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/:username" element={<PublicProfilePage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/messages" element={<MessagingPage />} />
           <Route path="/change-password" element={<ChangePasswordPage />} />
@@ -87,7 +91,7 @@ export default function App() {
             <div className="text-center">
               <p className="font-display font-800 text-6xl text-spark-500 mb-4">404</p>
               <p className="text-gray-400 mb-6">Page not found</p>
-              <a href="/dashboard" className="spark-btn-primary inline-flex">Go Home</a>
+              <a href="/feed" className="spark-btn-primary inline-flex">Go Home</a>
             </div>
           </div>
         } />

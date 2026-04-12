@@ -23,7 +23,7 @@ export const AdminRoute = ({ children }) => {
   const location = useLocation();
   if (loading) return <PageLoader />;
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (!isAdmin) return <Navigate to="/dashboard" replace />;
+  if (!isAdmin) return <Navigate to="/feed" replace />;
   return children;
 };
 
@@ -32,13 +32,13 @@ export const GuardianRoute = ({ children }) => {
   const location = useLocation();
   if (loading) return <PageLoader />;
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (!isGuardian) return <Navigate to="/dashboard" replace />;
+  if (!isGuardian) return <Navigate to="/feed" replace />;
   return children;
 };
 
 export const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading, isAdmin } = useAuth();
   if (loading) return <PageLoader />;
-  if (isAuthenticated) return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />;
+  if (isAuthenticated) return <Navigate to={isAdmin ? '/admin' : '/feed'} replace />;
   return children;
 };

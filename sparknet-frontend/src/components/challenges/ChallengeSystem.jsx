@@ -1,90 +1,130 @@
 import { Link } from 'react-router-dom';
 
+/* ── Progress Bar ──────────────────────────────────── */
 export const ProgressBar = ({ progress, label }) => (
   <div className="w-full">
     {label && (
-      <div className="flex justify-between text-xs font-mono text-gray-400 mb-1">
+      <div className="flex justify-between text-[10px] font-headline font-bold uppercase tracking-widest text-slate-500 mb-2">
         <span>{label}</span>
-        <span>{progress}%</span>
+        <span className="text-primary">{progress}%</span>
       </div>
     )}
-    <div className="h-2 w-full bg-dark-700 rounded-full overflow-hidden border border-dark-600">
+    <div className="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden shadow-inner">
       <div 
-        className="h-full bg-gradient-to-r from-spark-600 to-purple-500 rounded-full transition-all duration-1000 ease-out"
+        className="h-full bg-primary rounded-full transition-all duration-1000 ease-out relative"
         style={{ width: `${progress}%` }}
-      />
+      >
+        <div className="absolute inset-0 bg-white/20 w-1/2 -skew-x-12 -translate-x-full animate-[shimmer_2s_infinite]"></div>
+      </div>
     </div>
   </div>
 );
 
+/* ── Challenge Card ────────────────────────────────── */
 export const ChallengeCard = ({ challenge, isJoined }) => (
-  <div className="relative spark-card p-6 flex flex-col group overflow-hidden animate-fade-in hover:border-spark-500/30 transition-all duration-300 transform hover:-translate-y-1">
-    <div className="absolute top-0 right-0 p-4">
-      <span className="px-3 py-1 rounded-full bg-dark-700/80 border border-dark-500 text-xs font-mono text-spark-400 backdrop-blur-sm">
+  <div className="bg-surface-container p-8 rounded-3xl flex flex-col group overflow-hidden border border-outline-variant/10 hover:border-primary/30 transition-all duration-500 shadow-xl relative mt-4">
+    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors -translate-y-1/2 translate-x-1/2"></div>
+    
+    <div className="absolute top-4 right-4 z-10">
+      <span className="px-3 py-1 rounded-full bg-surface-container-highest border border-outline-variant/10 text-[10px] font-headline font-bold text-primary uppercase tracking-widest backdrop-blur-md shadow-sm">
         {challenge.points} pts
       </span>
     </div>
     
-    <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform">{challenge.icon || '🏆'}</div>
+    <div className="w-16 h-16 rounded-2xl bg-surface-container-highest border border-outline-variant/10 flex items-center justify-center text-3xl mb-6 shadow-sm group-hover:-translate-y-1 transition-transform relative z-10 group-hover:border-primary/20 group-hover:text-primary">
+      {challenge.icon || <span className="material-symbols-outlined text-3xl">emoji_events</span>}
+    </div>
     
-    <h3 className="font-display font-700 text-lg text-white mb-2">{challenge.title}</h3>
-    <p className="text-sm text-gray-400 mb-6 flex-1 line-clamp-3">{challenge.description}</p>
+    <h3 className="font-headline font-bold text-xl text-on-surface mb-2 tracking-tight relative z-10">{challenge.title}</h3>
+    <p className="text-sm text-slate-400 mb-8 flex-1 leading-relaxed relative z-10">{challenge.description}</p>
     
-    {isJoined ? (
-      <div className="space-y-4">
-        <ProgressBar progress={challenge.progress || 0} label="My Progress" />
+    <div className="relative z-10">
+      {isJoined ? (
+        <div className="space-y-6">
+          <ProgressBar progress={challenge.progress || 0} label="Completion Status" />
+          <Link 
+            to={`/challenges/${challenge._id || challenge.id}`}
+            className="btn-secondary w-full text-center flex items-center justify-center gap-2 py-3"
+          >
+            <span className="material-symbols-outlined text-[18px]">analytics</span>
+            View Metrics
+          </Link>
+        </div>
+      ) : (
         <Link 
           to={`/challenges/${challenge._id || challenge.id}`}
-          className="block text-center w-full py-2 rounded-xl bg-dark-700 border border-dark-500 text-sm font-display font-600 text-white hover:border-spark-500 hover:text-spark-400 transition-colors"
+          className="btn-primary w-full text-center flex items-center justify-center gap-2 py-3 shadow-[0_0_15px_rgba(173,198,255,0.15)] group-hover:shadow-[0_0_20px_rgba(173,198,255,0.25)] transition-shadow"
         >
-          View Details
+          <span className="material-symbols-outlined text-[18px]">add_circle</span>
+          Accept Challenge
         </Link>
-      </div>
-    ) : (
-      <Link 
-        to={`/challenges/${challenge._id || challenge.id}`}
-        className="block text-center w-full py-2 rounded-xl bg-spark-600 hover:bg-spark-500 hover:shadow-lg hover:shadow-spark-500/20 text-sm font-display font-600 text-white transition-all"
-      >
-        Join Challenge
-      </Link>
-    )}
+      )}
+    </div>
   </div>
 );
 
-export const LeaderboardTable = ({ entries }) => (
-  <div className="overflow-hidden rounded-xl border border-dark-600 bg-dark-800/50">
-    <table className="w-full text-left text-sm text-gray-400">
-      <thead className="bg-dark-700/50 font-mono text-xs uppercase text-gray-500">
+/* ── Leaderboard Table ─────────────────────────────── */
+export const LeaderboardTable = ({ entries, onVote, votingFor, currentUserId }) => (
+  <div className="overflow-hidden rounded-3xl border border-outline-variant/10 bg-surface-container shadow-2xl">
+    <table className="w-full text-left text-sm text-slate-300">
+      <thead className="bg-surface-container-highest border-b border-outline-variant/10 font-headline text-[10px] uppercase font-bold tracking-widest text-slate-500">
         <tr>
-          <th className="px-6 py-4">Rank</th>
-          <th className="px-6 py-4">Participant</th>
-          <th className="px-6 py-4 text-right">Points / Score</th>
+          <th className="px-6 py-5 rounded-tl-3xl">Rank</th>
+          <th className="px-6 py-5">Operator</th>
+          <th className="px-6 py-5 text-right">Score</th>
+          {onVote && <th className="px-6 py-5 text-right rounded-tr-3xl">Vote</th>}
         </tr>
       </thead>
-      <tbody>
+      <tbody className="divide-y divide-outline-variant/5">
         {entries.map((entry, idx) => (
           <tr 
             key={entry._id || entry.id} 
-            className="border-b border-dark-600/50 hover:bg-dark-700/30 transition-colors"
+            className="hover:bg-surface-container-high transition-colors group"
           >
-            <td className="px-6 py-4">
-              <span className={`font-display font-700 ${idx < 3 ? 'text-spark-400 text-lg' : 'text-gray-500'}`}>
-                {idx === 0 ? '👑 1' : idx + 1}
+            <td className="px-6 py-5">
+              <span className={`font-headline font-black text-lg ${
+                idx === 0 ? 'text-tertiary-fixed drop-shadow-[0_0_8px_rgba(255,218,102,0.5)]' : 
+                idx === 1 ? 'text-slate-300 drop-shadow-[0_0_8px_rgba(203,213,225,0.3)]' : 
+                idx === 2 ? 'text-orange-300/80' : 
+                'text-slate-600'
+              }`}>
+                {idx === 0 ? (
+                  <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>trophy</span> 1</span>
+                ) : (
+                  `#${idx + 1}`
+                )}
               </span>
             </td>
-            <td className="px-6 py-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-dark-600 to-dark-700 border border-dark-500 flex items-center justify-center text-xs text-white">
-                  {entry.username[0]?.toUpperCase()}
+            <td className="px-6 py-5">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant/10 flex items-center justify-center text-sm font-headline font-black text-slate-400 group-hover:border-primary/30 transition-colors shadow-inner">
+                  {(entry.user?.username || entry.username || '?')[0]?.toUpperCase()}
                 </div>
-                <span className="font-display font-600 text-gray-300">{entry.username}</span>
+                <span className="font-headline font-bold text-slate-200 tracking-wide">{entry.user?.username || entry.username || 'Unknown'}</span>
               </div>
             </td>
-            <td className="px-6 py-4 text-right">
-              <span className="font-mono text-purple-400 px-2 py-1 rounded-md bg-purple-500/10 border border-purple-500/20">
+            <td className="px-6 py-5 text-right">
+              <span className="font-headline font-bold text-primary px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 tracking-wide inline-block shadow-sm">
                 {entry.score}
               </span>
             </td>
+            {onVote && (() => {
+              const entryUserId = entry.user?._id || entry.userId;
+              const isOwnEntry = String(entryUserId) === String(currentUserId);
+              return (
+                <td className="px-6 py-5 text-right">
+                  {!isOwnEntry && (
+                    <button
+                      onClick={() => onVote(entryUserId)}
+                      disabled={votingFor === entryUserId}
+                      className="px-3 py-1.5 rounded-lg bg-tertiary/10 text-tertiary border border-tertiary/20 text-xs font-bold font-headline hover:bg-tertiary/20 transition-colors disabled:opacity-50"
+                    >
+                      {votingFor === entryUserId ? '...' : '▲ Vote'}
+                    </button>
+                  )}
+                </td>
+              );
+            })()}
           </tr>
         ))}
       </tbody>

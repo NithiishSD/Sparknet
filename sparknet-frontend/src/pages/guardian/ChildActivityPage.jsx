@@ -14,58 +14,79 @@ export const ChildActivityPage = () => {
   useEffect(() => {
     guardianApi.getChildActivity(childId)
       .then(({ data }) => setActivity(data.activity))
-      .catch(() => toast.error('Failed to load activity'))
+      .catch(() => toast.error('Failed to load telemetry'))
       .finally(() => setLoading(false));
   }, [childId]);
 
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
-  if (!activity) return <div className="text-center py-20 text-gray-500">Activity not found.</div>;
+  if (!activity) return <div className="text-center py-20 text-slate-500 font-headline uppercase tracking-widest font-bold">Node telemetry offline or inaccessible.</div>;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 page-enter">
-      <div className="flex items-center gap-3">
-        <Link to="/guardian" className="text-gray-500 hover:text-white transition-colors font-mono text-sm">← Guardian</Link>
-        <span className="text-gray-600">/</span>
-        <span className="text-gray-300 font-display font-600">{activity.username}</span>
+    <div className="max-w-4xl mx-auto space-y-6 page-enter py-8 px-4 sm:px-6">
+      <div className="flex items-center gap-3 bg-surface-container-highest px-4 py-3 rounded-2xl w-fit border border-outline-variant/10 shadow-sm">
+        <Link to="/guardian" className="text-slate-500 hover:text-primary transition-colors text-[11px] font-headline font-bold uppercase tracking-widest flex items-center gap-2">
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          Overseer Dashboard
+        </Link>
+        <span className="text-slate-600 font-bold">/</span>
+        <span className="text-slate-300 font-headline font-black tracking-wide bg-surface-container px-3 py-1 rounded-lg border border-outline-variant/10">{activity.username}</span>
       </div>
 
-      <div>
-        <h1 className="font-display font-800 text-3xl text-white">{activity.username}'s Activity</h1>
-        <p className="text-gray-500 mt-1">Monitoring & login history</p>
+      <div className="pt-4 border-b border-outline-variant/10 pb-6">
+        <h1 className="font-headline font-black text-3xl text-on-surface tracking-tighter flex items-center gap-3">
+           <span className="material-symbols-outlined text-primary text-3xl">insights</span>
+           {activity.username} Telemetry
+        </h1>
+        <p className="text-slate-500 mt-2 font-medium">Session monitoring & login history logs</p>
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard label="Status" value={<StatusBadge status={activity.status} />} />
-        <StatCard label="Active Sessions" value={<span className="font-mono text-spark-400 text-lg font-700">{activity.activeSessions}</span>} />
-        <StatCard label="Last Login" value={<span className="text-xs text-gray-300 font-mono">{formatDateTime(activity.lastLoginAt)}</span>} />
-        <StatCard label="Last IP" value={<span className="text-xs text-gray-300 font-mono">{activity.lastLoginIp || '—'}</span>} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard label="Current Status" value={<StatusBadge status={activity.status} />} />
+        <StatCard 
+          label="Active Sessions" 
+          value={<span className="font-headline font-black text-primary text-xl drop-shadow-[0_0_8px_rgba(173,198,255,0.4)]">{activity.activeSessions}</span>} 
+        />
+        <StatCard 
+          label="Last Uplink" 
+          value={<span className="text-xs text-slate-300 font-headline font-bold">{formatDateTime(activity.lastLoginAt)}</span>} 
+        />
+        <StatCard 
+          label="Origin IP" 
+          value={<span className="text-xs text-slate-300 font-headline font-bold bg-surface-container-highest px-2 py-1 rounded-md">{activity.lastLoginIp || '—'}</span>} 
+        />
       </div>
 
       {/* Login history */}
-      <div className="spark-card overflow-hidden">
-        <div className="px-5 py-4 border-b border-dark-600">
-          <h2 className="font-display font-700 text-white">Login History</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Last 30 logins</p>
+      <div className="bg-surface-container rounded-3xl overflow-hidden border border-outline-variant/10 shadow-lg mt-6">
+        <div className="px-6 md:px-8 py-5 border-b border-outline-variant/10 bg-surface-container-highest">
+          <h2 className="font-headline font-bold text-lg text-on-surface flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary">history</span>
+            Access Logs
+          </h2>
+          <p className="text-[11px] text-slate-500 font-headline font-bold uppercase tracking-widest mt-1">Last 30 recorded uplinks</p>
         </div>
-        <div className="divide-y divide-dark-600">
+        <div className="divide-y divide-outline-variant/5">
           {activity.loginHistory?.length === 0 && (
-            <p className="px-5 py-8 text-center text-gray-500 text-sm">No login history yet.</p>
+            <div className="px-6 py-12 text-center">
+              <span className="material-symbols-outlined text-4xl text-slate-600 mb-2 opacity-50">search_off</span>
+              <p className="text-slate-400 text-sm font-medium">No recorded access telemetry.</p>
+            </div>
           )}
           {[...activity.loginHistory].reverse().map((entry, i) => (
-            <div key={i} className="px-5 py-3 flex items-center justify-between hover:bg-dark-700/40 transition-colors">
-              <div className="flex items-center gap-3">
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${entry.success ? 'bg-emerald-400' : 'bg-red-400'}`} />
+            <div key={i} className="px-6 md:px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-surface-container-high transition-colors group">
+              <div className="flex items-center gap-4">
+                <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-inner ${entry.success ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-error shadow-[0_0_8px_rgba(255,180,171,0.5)]'}`} />
                 <div>
-                  <p className="text-sm text-gray-300 font-mono">{entry.ip}</p>
-                  <p className="text-xs text-gray-600 truncate max-w-xs">{entry.device}</p>
+                  <p className="text-sm text-slate-300 font-headline font-bold bg-surface-container-highest px-2 py-0.5 rounded border border-outline-variant/5 w-fit">{entry.ip}</p>
+                  <p className="text-[11px] text-slate-500 truncate max-w-[200px] sm:max-w-xs mt-1 font-medium group-hover:text-slate-400 transition-colors">{entry.device}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className={`text-xs font-mono font-600 ${entry.success ? 'text-emerald-400' : 'text-red-400'}`}>
+              <div className="text-left sm:text-right pl-6 sm:pl-0">
+                <p className={`text-[11px] font-headline font-black uppercase tracking-widest ${entry.success ? 'text-emerald-400' : 'text-error'}`}>
                   {entry.success ? 'Success' : 'Failed'}
                 </p>
-                <p className="text-xs text-gray-600">{formatDateTime(entry.timestamp)}</p>
+                <p className="text-[11px] text-slate-500 font-headline font-bold mt-1 max-w-[150px]">{formatDateTime(entry.timestamp)}</p>
               </div>
             </div>
           ))}
@@ -76,8 +97,10 @@ export const ChildActivityPage = () => {
 };
 
 const StatCard = ({ label, value }) => (
-  <div className="spark-card p-4">
-    <p className="text-xs text-gray-500 font-mono uppercase tracking-widest mb-2">{label}</p>
-    <div>{value}</div>
+  <div className="bg-surface-container p-5 rounded-3xl border border-outline-variant/5 hover:border-outline-variant/20 hover:bg-surface-container-high transition-colors text-center flex flex-col justify-center items-center shadow-sm">
+    <p className="text-[10px] text-slate-500 font-headline font-bold uppercase tracking-widest mb-3 flex items-center justify-center gap-1">
+      {label}
+    </p>
+    <div className="flex justify-center items-center h-full">{value}</div>
   </div>
 );

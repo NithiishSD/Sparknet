@@ -36,7 +36,7 @@ export const AdminUsersPage = () => {
       setUsers(data.users);
       setTotal(data.total);
       setPages(data.pages);
-    } catch { toast.error('Failed to load users'); }
+    } catch { toast.error('Failed to enumerate nodes'); }
     finally { setLoading(false); }
   }, [page, debouncedSearch, filters.role, filters.status, filters.isGuardian]);
 
@@ -46,74 +46,90 @@ export const AdminUsersPage = () => {
   const setFilter = (f) => (e) => setFilters({ ...filters, [f]: e.target.value });
 
   return (
-    <div className="space-y-6 page-enter">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 page-enter py-8 px-4 sm:px-6 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-outline-variant/10 pb-6">
         <div>
-          <h1 className="font-display font-800 text-3xl text-white">Users</h1>
-          <p className="text-gray-500 mt-1">{total} total users</p>
+          <h1 className="font-headline font-black text-4xl text-on-surface tracking-tighter flex items-center gap-3">
+            <span className="material-symbols-outlined text-primary text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>manage_accounts</span>
+            Node Directory
+          </h1>
+          <p className="text-slate-500 mt-2 font-medium">Tracking {total} registered operational units</p>
         </div>
-        <Link to="/admin" className="spark-btn-ghost text-sm">← Admin</Link>
+        <Link to="/admin" className="btn-secondary py-2 px-4 shadow-sm flex items-center gap-2 w-fit">
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          Central Command
+        </Link>
       </div>
 
       {/* Filters */}
-      <div className="spark-card p-4 flex flex-wrap gap-3">
-        <input
-          type="text"
-          placeholder="Search username or email..."
-          value={filters.search}
-          onChange={setFilter('search')}
-          className="spark-input flex-1 min-w-48"
-        />
-        <select value={filters.role} onChange={setFilter('role')} className="spark-input w-36">
-          {ROLES.map(r => <option key={r} value={r}>{r || 'All Roles'}</option>)}
+      <div className="bg-surface-container rounded-3xl p-6 border border-outline-variant/5 shadow-sm flex flex-col md:flex-row flex-wrap gap-4 items-center">
+        <div className="relative flex-1 w-full md:min-w-[200px]">
+          <input
+            type="text"
+            placeholder="Search terminal ID or alias..."
+            value={filters.search}
+            onChange={setFilter('search')}
+            className="input-base w-full pl-11"
+          />
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">search</span>
+        </div>
+        <select value={filters.role} onChange={setFilter('role')} className="input-base w-full md:w-auto min-w-[140px]">
+          {ROLES.map(r => <option key={r} value={r}>{r ? r.toUpperCase() : 'ALL CLEARANCES'}</option>)}
         </select>
-        <select value={filters.status} onChange={setFilter('status')} className="spark-input w-48">
-          {STATUSES.map(s => <option key={s} value={s}>{s?.replace(/_/g,' ') || 'All Statuses'}</option>)}
+        <select value={filters.status} onChange={setFilter('status')} className="input-base w-full md:w-auto min-w-[160px]">
+          {STATUSES.map(s => <option key={s} value={s}>{s ? s.replace(/_/g,' ').toUpperCase() : 'ALL STATES'}</option>)}
         </select>
-        <label className="flex items-center gap-2 cursor-pointer px-3 py-2 spark-input w-auto">
-          <input type="checkbox" checked={!!filters.isGuardian} onChange={(e) => setFilters({ ...filters, isGuardian: e.target.checked })} className="accent-spark-500" />
-          <span className="text-sm text-gray-400 whitespace-nowrap">Guardians only</span>
+        <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-surface-container-highest border border-outline-variant/10 hover:border-outline-variant/30 transition-all w-full md:w-auto h-full">
+          <div className="relative">
+            <input type="checkbox" checked={!!filters.isGuardian} onChange={(e) => setFilters({ ...filters, isGuardian: e.target.checked })} className="peer sr-only" />
+            <div className="w-10 h-5 bg-surface-container rounded-full peer peer-checked:bg-primary transition-colors border border-outline-variant/20 shadow-inner"></div>
+            <div className="absolute left-1 top-[2px] bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow"></div>
+          </div>
+          <span className="text-[11px] font-headline font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Overseers Only</span>
         </label>
       </div>
 
       {/* Table */}
-      <div className="spark-card overflow-hidden">
+      <div className="bg-surface-container rounded-3xl overflow-hidden border border-outline-variant/10 shadow-lg">
         {loading ? (
-          <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+          <div className="flex justify-center py-20"><Spinner size="lg" /></div>
         ) : users.length === 0 ? (
-          <div className="text-center py-16 text-gray-500">No users found.</div>
+          <div className="flex flex-col items-center justify-center py-20 bg-surface-container">
+             <span className="material-symbols-outlined text-6xl text-slate-600 mb-4 opacity-50">person_off</span>
+             <p className="text-slate-400 font-medium font-headline tracking-wide">No terminals match the current filters.</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-dark-600">
-                  {['User', 'Role', 'Status', 'Mode', 'Last Login', 'Actions'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-mono uppercase tracking-widest text-gray-500">{h}</th>
+                <tr className="border-b border-outline-variant/10 bg-surface-container-highest">
+                  {['Identifier', 'Clearance', 'State', 'Protocol', 'Last Uplink', 'Directives'].map(h => (
+                    <th key={h} className="px-6 py-4 text-[11px] font-headline font-bold uppercase tracking-widest text-slate-500">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-dark-700">
+              <tbody className="divide-y divide-outline-variant/5">
                 {users.map(u => (
-                  <tr key={u._id} className="hover:bg-dark-700/40 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-spark-500 to-spark-700 flex items-center justify-center text-xs font-display font-700 text-white flex-shrink-0">
+                  <tr key={u._id} className="hover:bg-surface-container-high transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-surface-container-highest border border-outline-variant/10 flex items-center justify-center text-sm font-headline font-black text-slate-300 shadow-inner group-hover:border-primary/20 transition-colors">
                           {u.username?.[0]?.toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-display font-600 text-sm text-white">{u.username}</p>
-                          <p className="text-xs text-gray-500 font-mono">{u.email}</p>
-                          {u.isGuardian && <span className="text-xs text-spark-400 font-mono">⚡ guardian ({u.linkedChildrenCount})</span>}
+                          <p className="font-headline font-bold text-base text-on-surface tracking-wide">{u.username}</p>
+                          <p className="text-[11px] text-slate-500 font-headline uppercase tracking-widest font-bold">{u.email}</p>
+                          {u.isGuardian && <span className="text-[10px] text-tertiary font-headline font-bold uppercase tracking-widest mt-1 block">⚡ Overseer ({u.linkedChildrenCount})</span>}
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
-                    <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
-                    <td className="px-4 py-3"><ModeBadge mode={u.mode} /></td>
-                    <td className="px-4 py-3 text-xs text-gray-500 font-mono whitespace-nowrap">{formatDateTime(u.lastLoginAt)}</td>
-                    <td className="px-4 py-3">
-                      <Link to={`/admin/users/${u._id}`} className="spark-btn-ghost text-xs px-3 py-1.5">
-                        Manage →
+                    <td className="px-6 py-4"><RoleBadge role={u.role} /></td>
+                    <td className="px-6 py-4"><StatusBadge status={u.status} /></td>
+                    <td className="px-6 py-4"><ModeBadge mode={u.mode} /></td>
+                    <td className="px-6 py-4 text-xs text-slate-500 font-headline font-bold whitespace-nowrap">{formatDateTime(u.lastLoginAt)}</td>
+                    <td className="px-6 py-4">
+                      <Link to={`/admin/users/${u._id}`} className="btn-secondary py-1.5 px-4 text-[10px] bg-surface-container-highest border-outline-variant/10">
+                        Intercept <span className="material-symbols-outlined text-[12px] ml-1">arrow_forward</span>
                       </Link>
                     </td>
                   </tr>
@@ -126,11 +142,15 @@ export const AdminUsersPage = () => {
 
       {/* Pagination */}
       {pages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500 font-mono">Page {page} of {pages}</p>
+        <div className="flex items-center justify-between pt-4">
+          <p className="text-[11px] text-slate-500 font-headline font-bold uppercase tracking-widest">Sector {page} of {pages}</p>
           <div className="flex gap-2">
-            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="spark-btn-ghost text-sm px-4 py-2 disabled:opacity-30">← Prev</button>
-            <button disabled={page >= pages} onClick={() => setPage(p => p + 1)} className="spark-btn-ghost text-sm px-4 py-2 disabled:opacity-30">Next →</button>
+            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="btn-secondary py-2 px-4 disabled:opacity-30 flex items-center gap-2">
+               <span className="material-symbols-outlined text-[16px]">chevron_left</span> Prev
+            </button>
+            <button disabled={page >= pages} onClick={() => setPage(p => p + 1)} className="btn-secondary py-2 px-4 disabled:opacity-30 flex items-center gap-2">
+               Next <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+            </button>
           </div>
         </div>
       )}

@@ -67,10 +67,10 @@ const EditProfile = () => {
 
     try {
       await profileApi.updateProfile(data);
-      toast.success('Profile updated successfully!');
+      toast.success('Configuration updated');
       setTimeout(() => navigate('/profile'), 1500);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update profile');
+      toast.error(err.response?.data?.message || 'Update failed');
     } finally {
       setSaving(false);
     }
@@ -78,36 +78,36 @@ const EditProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20">
-        <div className="w-10 h-10 border-4 border-spark-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex justify-center py-24">
+        <div className="w-12 h-12 border-[3px] border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 page-enter pb-10">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-xl bg-dark-800 text-gray-400 hover:text-white transition-colors">
-          <span className="text-xl">←</span>
+    <div className="max-w-3xl mx-auto space-y-8 page-enter py-8 px-4 sm:px-6">
+      <div className="flex items-center gap-6 mb-8 border-b border-outline-variant/10 pb-6">
+        <button onClick={() => navigate(-1)} className="w-12 h-12 rounded-full bg-surface-container-highest hover:bg-surface-container-high transition-colors flex items-center justify-center text-slate-400 hover:text-primary">
+          <span className="material-symbols-outlined">arrow_back</span>
         </button>
         <div>
-          <h1 className="font-display font-800 text-3xl text-white">Edit Profile</h1>
-          <p className="text-gray-500 mt-1">Customize your presence on Spark</p>
+          <h1 className="font-headline font-black text-4xl text-on-surface tracking-tighter">Modify Configuration</h1>
+          <p className="text-slate-500 mt-2 font-medium">Update operator details for the network</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
         {/* Avatar Upload */}
-        <div className="spark-card p-8 flex flex-col items-center">
+        <div className="bg-surface-container rounded-3xl p-8 flex flex-col items-center border border-outline-variant/5">
           <div className="relative group cursor-pointer" onClick={() => document.getElementById('avatar-input').click()}>
-            <div className="w-32 h-32 rounded-3xl bg-dark-700 flex items-center justify-center overflow-hidden border-2 border-dark-600 transition-all group-hover:border-spark-500">
+            <div className="w-40 h-40 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border-[6px] border-surface-container transition-all group-hover:border-primary/50 shadow-2xl">
               {preview ? (
                 <img src={preview} alt="Preview" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-5xl">👤</span>
+                <span className="material-symbols-outlined text-6xl text-slate-500">account_circle</span>
               )}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-2xl">
-                📷
+              <div className="absolute inset-0 bg-surface-container-highest/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm text-primary">
+                <span className="material-symbols-outlined text-4xl">add_a_photo</span>
               </div>
             </div>
             <input 
@@ -118,67 +118,67 @@ const EditProfile = () => {
               className="hidden" 
             />
           </div>
-          <p className="text-xs text-gray-500 mt-4 uppercase tracking-widest font-mono">Change Avatar</p>
+          <p className="text-[11px] text-slate-500 mt-6 uppercase tracking-[0.2em] font-bold font-headline">Visual Identification</p>
         </div>
 
         {/* Basic Info */}
-        <div className="spark-card p-6 space-y-5">
-          <div className="space-y-2">
-            <label className="text-xs font-mono text-gray-500 uppercase tracking-wider flex items-center gap-2">
-              <span>👤</span> Display Name
+        <div className="bg-surface-container rounded-3xl p-8 space-y-6 border border-outline-variant/5">
+          <div className="space-y-3">
+            <label className="text-[11px] font-headline text-slate-500 uppercase tracking-widest flex items-center gap-2 font-bold">
+              <span className="material-symbols-outlined text-[16px]">badge</span> Operator Name
             </label>
             <input 
               type="text" 
               name="displayName" 
               value={formData.displayName} 
               onChange={handleChange} 
-              placeholder="What should we call you?"
-              className="spark-input w-full bg-dark-800 border-dark-700 text-white focus:border-spark-500"
+              placeholder="What should the network call you?"
+              className="input-base w-full"
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-mono text-gray-500 uppercase tracking-wider flex items-center gap-2">
-              <span>📝</span> Bio
+          <div className="space-y-3">
+            <label className="text-[11px] font-headline text-slate-500 uppercase tracking-widest flex items-center gap-2 font-bold">
+              <span className="material-symbols-outlined text-[16px]">description</span> Bio Signature
             </label>
             <textarea 
               name="bio" 
               value={formData.bio} 
               onChange={handleChange} 
-              rows="3"
-              placeholder="Tell the community something about yourself..."
-              className="spark-input w-full bg-dark-800 border-dark-700 text-white focus:border-spark-500 py-3"
+              rows="4"
+              placeholder="Provide a brief summary for your node..."
+              className="input-base w-full resize-none leading-relaxed"
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-xs font-mono text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                <span>📍</span> Location
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-3">
+              <label className="text-[11px] font-headline text-slate-500 uppercase tracking-widest flex items-center gap-2 font-bold">
+                <span className="material-symbols-outlined text-[16px]">location_on</span> Origin Sector
               </label>
               <input 
                 type="text" 
                 name="location" 
                 value={formData.location} 
                 onChange={handleChange} 
-                placeholder="Where are you based?"
-                className="spark-input w-full bg-dark-800 border-dark-700 text-white focus:border-spark-500"
+                placeholder="Where are you broadcasting from?"
+                className="input-base w-full"
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-mono text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                <span>🎯</span> Interests
+            <div className="space-y-3">
+              <label className="text-[11px] font-headline text-slate-500 uppercase tracking-widest flex items-center gap-2 font-bold">
+                <span className="material-symbols-outlined text-[16px]">stars</span> Interests
               </label>
               <input 
                 type="text" 
                 name="interests" 
                 value={formData.interests} 
                 onChange={handleChange} 
-                placeholder="Gaming, Coding, Sports..."
-                className="spark-input w-full bg-dark-800 border-dark-700 text-white focus:border-spark-500"
+                placeholder="Programming, Design, Science..."
+                className="input-base w-full"
               />
-              <p className="text-[10px] text-gray-600 font-mono italic">Separate with commas</p>
+              <p className="text-[10px] text-slate-500 font-headline uppercase tracking-wide mt-1 pl-2">Comma separated values</p>
             </div>
           </div>
         </div>
@@ -186,14 +186,14 @@ const EditProfile = () => {
         <button 
           type="submit" 
           disabled={saving}
-          className={`spark-btn-primary w-full py-4 rounded-2xl font-display font-800 text-lg flex items-center justify-center gap-3 transition-all ${saving ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-spark-500/20'}`}
+          className={`btn-primary w-full py-4 rounded-full text-base flex items-center justify-center gap-3 transition-all mt-4 ${saving ? 'opacity-50 cursor-wait' : ''}`}
         >
           {saving ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
           ) : (
             <>
-              <span>✅</span>
-              Save Profile Changes
+              <span className="material-symbols-outlined text-[20px]">save_as</span>
+              Commit Changes
             </>
           )}
         </button>

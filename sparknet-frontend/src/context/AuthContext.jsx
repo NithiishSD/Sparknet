@@ -9,15 +9,17 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchMe = useCallback(async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
     try {
       const { data } = await authApi.getMe();
+      
+      // Hydrate token if it came back from getMe (e.g. following OAuth cookie redirect)
+      const token = data.accessToken || localStorage.getItem('accessToken');
+      if (data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+      }
+      
       setUser(data.user);
-      connectSocket(token); // Connect socket on successful fetch
+      if (token) connectSocket(token); // Connect socket on successful fetch
     } catch {
       setUser(null);
       localStorage.removeItem('accessToken');

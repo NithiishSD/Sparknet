@@ -1,54 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
 import { ChallengeCard } from '../../components/challenges/ChallengeSystem';
-
-const dummyChallenges = [
-  {
-    id: 1,
-    title: 'Daily Coding Streak',
-    description: 'Solve one algorithmic puzzle every day for 7 days.',
-    points: 500,
-    icon: '💻',
-    category: 'coding'
-  },
-  {
-    id: 2,
-    title: 'Digital Detox Weekend',
-    description: 'Keep your screen time under 2 hours this Saturday and Sunday.',
-    points: 1000,
-    icon: '🧘',
-    category: 'wellness'
-  },
-  {
-    id: 3,
-    title: 'Community Helper',
-    description: 'Answer 5 questions from beginners in the Help forum.',
-    points: 300,
-    icon: '🤝',
-    category: 'community'
-  }
-];
 
 export const ChallengesExplorerPage = () => {
   const [filter, setFilter] = useState('all');
+  const [challenges, setChallenges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      try {
+        const { data } = await api.get('/challenges');
+        if (data.success) {
+          setChallenges(data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch challenges', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchChallenges();
+  }, []);
 
   const filteredChallenges = filter === 'all' 
-    ? dummyChallenges 
-    : dummyChallenges.filter(c => c.category === filter);
+    ? challenges 
+    : challenges.filter(c => c.category === filter);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 page-enter">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="max-w-5xl mx-auto space-y-8 page-enter py-8 px-4 sm:px-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-outline-variant/10 pb-6">
         <div>
-          <h1 className="font-display font-800 text-3xl text-white">Challenges Explorer</h1>
-          <p className="text-gray-500 mt-1">Discover new skills, earn points, and climb the leaderboard.</p>
+          <h1 className="font-headline font-black text-4xl text-on-surface tracking-tighter flex items-center gap-3">
+            <span className="material-symbols-outlined text-primary text-4xl">emoji_events</span>
+            Missions & Objectives
+          </h1>
+          <p className="text-slate-500 mt-2 font-medium">Acquire new capabilities, gather credits, and ascend the ranks.</p>
         </div>
         
-        <div className="flex bg-dark-700 rounded-lg p-1 overflow-x-auto">
+        <div className="flex bg-surface-container-highest rounded-2xl p-1.5 overflow-x-auto border border-outline-variant/10 shadow-inner">
           {['all', 'coding', 'wellness', 'community'].map(f => (
             <button 
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-md font-display font-600 text-sm capitalize whitespace-nowrap transition-all ${filter === f ? 'bg-spark-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
+              className={`px-5 py-2 rounded-xl font-headline font-bold text-[11px] uppercase tracking-widest transition-all ${
+                filter === f 
+                  ? 'bg-primary text-on-primary shadow-md' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-surface-container-high'
+              }`}
             >
               {f}
             </button>
@@ -57,10 +58,22 @@ export const ChallengesExplorerPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredChallenges.map(challenge => (
-          <ChallengeCard key={challenge._id || challenge.id} challenge={challenge} isJoined={false} />
-        ))}
+        {loading ? (
+           <p className="text-slate-400 col-span-full text-center py-10 tracking-widest font-headline uppercase font-bold text-[11px]">Loading missions...</p>
+        ) : (
+          filteredChallenges.map(challenge => {
+            const isJoined = challenge.participants?.some(p => p.userId?._id === user?._id || p.userId === user?._id);
+            return <ChallengeCard key={challenge._id} challenge={challenge} isJoined={isJoined} />;
+          })
+        )}
       </div>
+      
+      {!loading && filteredChallenges.length === 0 && (
+         <div className="text-center py-20 bg-surface-container rounded-3xl border border-outline-variant/5">
+            <span className="material-symbols-outlined text-6xl text-slate-600 mb-4 opacity-50">search_off</span>
+            <p className="text-slate-400 font-medium font-headline tracking-wide">No active missions in this category.</p>
+         </div>
+      )}
     </div>
   );
 };

@@ -9,4 +9,11 @@ export const profileApi = {
   updatePrivacy: (privacy) => api.put('/profiles/privacy', privacy),
   getActivity: () => api.get('/profiles/activity'),
   resetProfile: () => api.delete('/profiles/reset'),
+  
+  // User Search & Connections
+  searchUsers: (query) => api.get(`/users/search?query=${encodeURIComponent(query)}`),
+  followUser: (targetId) => api.post('/users/follow', { targetId }),
+  unfollowUser: (targetId) => api.delete(`/users/follow/${targetId}`),
+  getFollowers: (targetId) => api.get(`/users/${targetId}/followers`),
+  getFollowing: () => api.get('/users/following'),
 };

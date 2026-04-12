@@ -21,4 +21,8 @@ export const postApi = {
   
   // User specific
   getUserPosts: (userId) => api.get(`/posts/user/${userId}`),
+  getSavedPosts: () => api.get('/posts/saved'),
+  getReplies: (commentId) => api.get(`/posts/comments/${commentId}/replies`),
+  getLikes: (postId) => api.get(`/posts/${postId}/likes`),
+  reportPost: (postId, reason, category) => api.post('/posts/report', { postId, reason, category }),
 };

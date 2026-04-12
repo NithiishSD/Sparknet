@@ -1,177 +1,84 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+/* =========================================================
+   SparkNet Global Design System — v3: Kinetic Observatory
+   Fonts: Inter (body) + Space Grotesk (display/headline)
+   Theme: Deep Slate, Glassmorphism, Neon Blue Accents
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --color-primary: #6366F1; /* Electric Indigo */
-  --color-secondary: #10B981; /* Cyber Green */
-  --color-tertiary: #A855F7; /* Neon Purple */
-  
-  --bg-layer-0: #0B0F19; /* Deep Void */
-  --bg-layer-1: #131B2C;
-  --bg-layer-2: #1E293B; /* Card Surfaces */
-  --bg-layer-glass: rgba(19, 27, 44, 0.8);
-  
-  --text-on-surface: #F8FAFC;
-  --text-muted: #94A3B8;
-  --text-inverse: #FFFFFF;
-}
-
 @layer base {
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #2d3449 #0b1326;
+  }
+
   body {
-    background-color: var(--bg-layer-0) !important;
-    color: var(--text-on-surface) !important;
+    background-color: theme('colors.background') !important;
+    color: theme('colors.on-background') !important;
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
-  }
-  
-  h1, h2, h3, h4, h5, h6, .font-display {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-  }
-  
-  h1 { font-size: 3.5rem; line-height: 1.1; font-weight: 800; }
-  h2 { font-size: 2.25rem; font-weight: 700; }
-
-  /* OVERWRITING LEGACY THEME HARDCODED UTILITIES */
-  .border, .border-t, .border-b, .border-l, .border-r,
-  .border-dark-500, .border-gray-700, hr {
-    border-color: transparent !important;
-    border-width: 0px !important;
+    min-height: 100vh;
   }
 
-  /* Force background changes away from old dark mode classes */
-  .bg-dark-900, .bg-dark-800, .bg-dark-700 {
-    background-color: transparent !important;
+  h1, h2, h3, h4, h5, h6, .font-headline {
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.02em;
   }
-  .bg-[#0a0a0f], .bg-[#111118], .bg-white { background-color: var(--bg-layer-0) !important; }
 }
 
 @layer components {
-  /* ─── Cards & Surfaces ─── */
-  .spark-card {
-    @apply rounded-3xl p-6 transition-all duration-300;
-    background-color: var(--bg-layer-2) !important;
-    /* Richer shadow for dark mode */
-    box-shadow: 0px 8px 32px rgba(0, 0, 0, 0.3) !important;
-    border: none !important;
+  /* Material Icons config */
+  .material-symbols-outlined { 
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; 
+  }
+
+  /* Glassmorphism helpers */
+  .glass-card { 
+    background: rgba(45, 52, 73, 0.4); 
+    backdrop-filter: blur(20px); 
+  }
+
+  /* Status Indicators ("The Pulse") */
+  .pulse-dot { 
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; 
+  }
+
+  /* Inputs — Soft Inner Glow Focus */
+  .input-base {
+    @apply w-full bg-surface-container-lowest border-none py-3 px-4 rounded-xl text-sm text-on-surface placeholder:text-slate-500 focus:ring-1 focus:ring-primary/40 transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)];
+    outline: none;
+  }
+
+  /* Custom Scrollbar applied to specific containers */
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: theme('colors.surface-container-highest'); border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: theme('colors.primary'); }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary to-primary-container text-on-primary-container font-bold py-3 px-6 rounded-lg text-[11px] uppercase tracking-widest shadow-[0_4px_20px_rgba(173,198,255,0.15)] active:scale-95 transition-transform;
   }
   
-  .spark-surface-low {
-    background-color: var(--bg-layer-1);
-    border-radius: 1.5rem;
-  }
-
-  .spark-glass {
-    background-color: var(--bg-layer-glass);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-  }
-
-  /* ─── Inputs ─── */
-  .spark-input {
-    @apply w-full rounded-2xl px-5 py-4;
-    background-color: #151d30 !important; /* Slightly distinct from layer 1 */
-    color: var(--text-on-surface) !important;
-    border: 2px solid transparent !important;
-    outline: none !important;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
-  }
-  .spark-input::placeholder {
-    color: var(--text-muted) !important;
-  }
-  .spark-input:focus {
-    background-color: var(--bg-layer-2) !important;
-    /* Primary color ghost border */
-    border: 2px solid rgba(99, 102, 241, 0.5) !important; 
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.1) !important;
-  }
-
-  /* ─── Buttons ─── */
-  .spark-btn {
-    @apply inline-flex items-center justify-center gap-3 px-8 py-3.5 
-           font-semibold text-sm tracking-wide transition-all duration-300 cursor-pointer;
-    border-radius: 9999px !important;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    border: none !important;
-  }
-  
-  .spark-btn-primary {
-    @apply spark-btn;
-    color: var(--text-inverse) !important;
-    background: linear-gradient(135deg, var(--color-primary), #4F46E5) !important;
-    box-shadow: inset 0 1px 0px rgba(255,255,255,0.15), 0 8px 24px rgba(99, 102, 241, 0.2) !important;
-  }
-  .spark-btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: inset 0 1px 0px rgba(255,255,255,0.25), 0 12px 28px rgba(99, 102, 241, 0.35) !important;
-  }
-  
-  .spark-btn-secondary {
-    @apply spark-btn;
-    background-color: rgba(16, 185, 129, 0.15) !important; 
-    color: var(--color-secondary) !important;
-  }
-  .spark-btn-secondary:hover {
-    background-color: rgba(16, 185, 129, 0.25) !important;
-  }
-
-  .spark-btn-ghost {
-    @apply spark-btn bg-transparent;
-    color: var(--color-primary) !important;
-  }
-  .spark-btn-ghost:hover {
-    background-color: rgba(99, 102, 241, 0.1) !important;
-  }
-
-  .spark-btn-danger {
-    @apply spark-btn bg-red-900/40 text-red-400;
-  }
-  .spark-btn-danger:hover {
-    background-color: rgba(220, 38, 38, 0.3) !important;
-  }
-
-  /* ─── Badges & Shields ─── */
-  .spark-shield {
-    @apply inline-flex items-center gap-2 px-3 py-1 text-xs font-bold tracking-wider;
-    border-radius: 9999px !important;
-    background-color: rgba(168, 85, 247, 0.15) !important; /* Neon purple */
-    color: var(--color-tertiary) !important;
-  }
-
-  .spark-label {
-    @apply block text-xs font-semibold tracking-widest mb-2;
-    color: var(--text-muted) !important;
-    font-family: 'Inter', sans-serif;
-  }
-  
-  .spark-badge {
-    @apply inline-flex items-center px-3 py-1 font-medium text-xs;
-    border-radius: 9999px !important;
-    background-color: rgba(99, 102, 241, 0.15) !important;
-    color: #818CF8 !important; /* Lighter indigo for badge */
-  }
-  
-  .glow-line {
-    @apply h-px w-full;
-    background: transparent !important; 
+  .btn-secondary {
+    @apply bg-transparent text-primary border border-outline-variant/30 hover:bg-primary/10 font-bold py-3 px-6 rounded-lg text-[11px] uppercase tracking-widest active:scale-95 transition-colors;
   }
 }
 
-/* Scrollbar Dark Theme */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+/* ── Scrollbar globals ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: theme('colors.background'); }
+::-webkit-scrollbar-thumb { background: theme('colors.surface-container-highest'); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: theme('colors.primary'); }
 
-/* Animations */
-.page-enter { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* ── Animations ─────────────────────────────────────────── */
+.page-enter  { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
