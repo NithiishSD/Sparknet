@@ -29,7 +29,7 @@ export const PublicProfilePage = () => {
   const [profileData, setProfileData] = useState(null);
   const [targetUser, setTargetUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [followState, setFollowState] = useState(null);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
@@ -64,22 +64,21 @@ export const PublicProfilePage = () => {
 
   const fetchConnections = async (targetId) => {
     try {
-      const [followersRes, followingRes, myFollowingRes] = await Promise.all([
+      const [followersRes, followingRes, statusesRes] = await Promise.all([
         profileApi.getFollowers(targetId),
         // we can't fetch their following without a dedicated route for public following if restricted, 
         // but let's see if we can just get theirs (wait, backend getFollowing only gets MY following currently: req.user._id).
         // Since backend getFollowing is `req.user._id`, we only know the "followers" count of the target.
         // I will fallback followingCount to 0 for now.
         Promise.resolve({ data: { following: [] } }), 
-        profileApi.getFollowing() // my following
+        profileApi.getConnectionStatuses()
       ]);
 
       const followersList = followersRes.data.followers || [];
       setFollowersCount(followersList.length);
       
-      // Check if current user is in their followers
-      const amIFollowing = followersList.some(f => f._id === currentUser?._id);
-      setIsFollowing(amIFollowing);
+      const status = statusesRes.data.statuses?.[targetId] || null;
+      setFollowState(status);
 
     } catch (e) {
       console.error(e);
@@ -89,16 +88,21 @@ export const PublicProfilePage = () => {
   const toggleFollow = async () => {
     if (!targetUser) return;
     try {
-      if (isFollowing) {
+      if (followState) {
         await profileApi.unfollowUser(targetUser._id);
-        setIsFollowing(false);
-        setFollowersCount(prev => Math.max(0, prev - 1));
+        if (followState === 'accepted') {
+          setFollowersCount(prev => Math.max(0, prev - 1));
+        }
+        setFollowState(null);
         toast.success(`Unfollowed ${targetUser.username}`);
       } else {
-        await profileApi.followUser(targetUser._id);
-        setIsFollowing(true);
-        setFollowersCount(prev => prev + 1);
-        toast.success(`Successfully following ${targetUser.username}`);
+        const { data } = await profileApi.followUser(targetUser._id);
+        const newStatus = data.message.includes('guardian') ? 'pending' : 'accepted';
+        setFollowState(newStatus);
+        if (newStatus === 'accepted') {
+           setFollowersCount(prev => prev + 1);
+        }
+        toast.success(data.message || `Successfully followed ${targetUser.username}`);
       }
     } catch (e) {
       toast.error(e.response?.data?.message || 'Action failed');
@@ -119,7 +123,7 @@ export const PublicProfilePage = () => {
         const api = (await import('../api/axios')).default;
         await api.post(`/users/block/${targetUser._id}`);
         setIsBlocked(true);
-        setIsFollowing(false);
+        setFollowState(null);
         toast.success(`${targetUser.username} blocked`);
       }
     } catch (e) {
@@ -150,7 +154,7 @@ export const PublicProfilePage = () => {
       {/* ── Back button ── */}
       <div>
         <Link to="/search" className="inline-flex items-center gap-2 text-[11px] font-headline font-bold uppercase tracking-widest text-slate-500 hover:text-primary transition-colors bg-surface-container-highest px-4 py-2 rounded-full hover:bg-primary/10">
-          <span className="material-symbols-outlined text-[16px]">arrow_back</span> Return to Explorer
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span> Back
         </Link>
       </div>
 
@@ -191,14 +195,17 @@ export const PublicProfilePage = () => {
           </div>
 
           {/* Follow + Block Buttons */}
-          {!isMe && (
+          {!isMe && currentUser?.role !== 'admin' && targetUser?.role !== 'admin' && (
             <div className="flex flex-col gap-2 shrink-0">
               <button 
                 onClick={toggleFollow}
-                className={`flex items-center gap-2 px-8 py-3 rounded-xl transition-all font-bold font-headline text-sm ${isFollowing ? 'bg-surface-container-highest text-slate-300 hover:text-error hover:bg-error-container/20 border border-outline-variant/20' : 'btn-primary shadow-[0_0_20px_rgba(173,198,255,0.2)]'}`}
+                className={`flex items-center gap-2 px-8 py-3 rounded-xl transition-all font-bold font-headline text-sm ${
+                  followState === 'accepted' ? 'bg-surface-container-highest text-slate-300 hover:text-error hover:bg-error-container/20 border border-outline-variant/20' 
+                  : followState === 'pending' ? 'bg-surface-container-highest text-tertiary border border-tertiary/20 opacity-80' 
+                  : 'btn-primary shadow-[0_0_20px_rgba(173,198,255,0.2)]'}`}
               >
-                <span className="material-symbols-outlined text-sm">{isFollowing ? 'person_remove' : 'person_add'}</span>
-                {isFollowing ? 'Unfollow' : 'Follow'}
+                <span className="material-symbols-outlined text-sm">{followState ? 'person_remove' : 'person_add'}</span>
+                {followState === 'accepted' ? 'Unfollow' : followState === 'pending' ? 'Requested' : 'Follow'}
               </button>
               <button 
                 onClick={toggleBlock}
@@ -224,7 +231,7 @@ export const PublicProfilePage = () => {
         <StatTile 
           icon="rss_feed" 
           value={activity?.postCount ?? 0} 
-          label="Broadcasts" 
+          label="Posts" 
           colorClass="text-slate-200" 
         />
         <StatTile 

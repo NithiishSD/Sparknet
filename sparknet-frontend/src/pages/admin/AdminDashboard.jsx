@@ -46,9 +46,9 @@ export const AdminDashboard = () => {
         <div>
           <h1 className="font-headline font-black text-4xl text-on-surface tracking-tighter flex items-center gap-3">
             <span className="material-symbols-outlined text-transparent bg-clip-text bg-gradient-to-tr from-primary to-tertiary text-4xl">local_police</span>
-            Central Command
+            Admin Dashboard
           </h1>
-          <p className="text-slate-500 mt-2 font-medium">Global platform telemetry and operator management</p>
+          <p className="text-slate-500 mt-2 font-medium">Platform statistics and user management</p>
         </div>
       </div>
 
@@ -77,12 +77,12 @@ export const AdminDashboard = () => {
         <>
           {/* Stats grid */}
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-            <StatCard label="Total Nodes" value={stats?.totalUsers} color="text-primary bg-primary/10 border-primary/20" icon="public" iconColor="text-primary" />
-            <StatCard label="Restricted Nodes" value={stats?.totalChildren} color="text-tertiary bg-tertiary/10 border-tertiary/20" icon="child_care" iconColor="text-tertiary" />
-            <StatCard label="Overseers" value={stats?.guardians} color="text-slate-300 bg-surface-container-highest border-outline-variant/20" icon="admin_panel_settings" iconColor="text-slate-400" />
-            <StatCard label="Active Uplinks" value={stats?.activeUsers} color="text-emerald-400 bg-emerald-500/10 border-emerald-500/20" icon="check_circle" iconColor="text-emerald-400" />
-            <StatCard label="Severed" value={stats?.bannedUsers} color="text-error bg-error/10 border-error/20" icon="block" iconColor="text-error" />
-            <StatCard label="Youth Protocols" value={stats?.youthModeUsers} color="text-purple-400 bg-purple-500/10 border-purple-500/20" icon="shield_lock" iconColor="text-purple-400" />
+            <StatCard label="Total Users" value={stats?.totalUsers} color="text-primary bg-primary/10 border-primary/20" icon="public" iconColor="text-primary" />
+            <StatCard label="Youth Users" value={stats?.totalChildren} color="text-tertiary bg-tertiary/10 border-tertiary/20" icon="child_care" iconColor="text-tertiary" />
+            <StatCard label="Guardians" value={stats?.guardians} color="text-slate-300 bg-surface-container-highest border-outline-variant/20" icon="admin_panel_settings" iconColor="text-slate-400" />
+            <StatCard label="Active Users" value={stats?.activeUsers} color="text-emerald-400 bg-emerald-500/10 border-emerald-500/20" icon="check_circle" iconColor="text-emerald-400" />
+            <StatCard label="Suspended" value={stats?.bannedUsers} color="text-error bg-error/10 border-error/20" icon="block" iconColor="text-error" />
+            <StatCard label="Youth Mode Users" value={stats?.youthModeUsers} color="text-purple-400 bg-purple-500/10 border-purple-500/20" icon="shield_lock" iconColor="text-purple-400" />
           </div>
 
           <div className="h-px w-full bg-gradient-to-r from-transparent via-outline-variant/20 to-transparent my-8" />
@@ -91,7 +91,7 @@ export const AdminDashboard = () => {
           <div>
             <h2 className="font-headline font-bold text-xl text-on-surface mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary">view_quilt</span>
-              Protocols & Operations
+              Management & Operations
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Link to="/admin/users" className="bg-surface-container rounded-3xl p-6 md:p-8 border border-outline-variant/10 hover:border-primary/40 hover:bg-surface-container-high transition-all shadow-sm group">
@@ -100,8 +100,8 @@ export const AdminDashboard = () => {
                     <span className="material-symbols-outlined shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>manage_accounts</span>
                   </div>
                   <div>
-                    <h3 className="font-headline font-bold text-lg text-slate-200 group-hover:text-primary transition-colors">Node Directory</h3>
-                    <p className="text-sm font-medium text-slate-500 mt-1">Interrogate, filter, and alter node operational status</p>
+                    <h3 className="font-headline font-bold text-lg text-slate-200 group-hover:text-primary transition-colors">User Directory</h3>
+                    <p className="text-sm font-medium text-slate-500 mt-1">View, filter, and manage user accounts</p>
                   </div>
                 </div>
               </Link>

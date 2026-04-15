@@ -26,7 +26,7 @@ export const AdminUserDetailPage = () => {
       ]);
       setUser(u.user);
       setActivity(a.activity);
-    } catch { toast.error('Failed to load node profile'); }
+    } catch { toast.error('Failed to load user profile'); }
     finally { setLoading(false); }
   };
 
@@ -35,7 +35,7 @@ export const AdminUserDetailPage = () => {
   const handleStatusChange = async () => {
     try {
       await adminApi.updateUserStatus(id, modal.value, reason);
-      toast.success(`Operational status mutated to ${modal.value}`);
+      toast.success(`Status updated to ${modal.value}`);
       setModal(null);
       setReason('');
       fetchUser();
@@ -45,7 +45,7 @@ export const AdminUserDetailPage = () => {
   const handleModeChange = async (mode) => {
     try {
       await adminApi.setUserMode(id, mode);
-      toast.success(`Protocol mode shifted to ${mode}`);
+      toast.success(`User mode updated to ${mode}`);
       fetchUser();
     } catch (err) { toast.error(err?.response?.data?.message || 'Failed'); }
   };
@@ -53,13 +53,13 @@ export const AdminUserDetailPage = () => {
   const handleForceLogout = async () => {
     try {
       await adminApi.forceLogout(id);
-      toast.success('All active connections severed');
+      toast.success('User has been forcefully logged out');
       fetchUser();
-    } catch { toast.error('Termination failed'); }
+    } catch { toast.error('Logout failed'); }
   };
 
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>;
-  if (!user) return <div className="text-center py-20 text-slate-500 font-headline uppercase tracking-widest font-bold">Node profile unavailable</div>;
+  if (!user) return <div className="text-center py-20 text-slate-500 font-headline uppercase tracking-widest font-bold">User profile unavailable</div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 page-enter py-8 px-4 sm:px-6">
@@ -67,11 +67,11 @@ export const AdminUserDetailPage = () => {
       <div className="flex items-center gap-3 bg-surface-container-highest px-4 py-3 rounded-2xl w-fit border border-outline-variant/10 shadow-sm leading-none">
         <Link to="/admin" className="text-slate-500 hover:text-primary transition-colors text-[11px] font-headline font-bold uppercase tracking-widest flex items-center gap-2">
           <span className="material-symbols-outlined text-[16px]">local_police</span>
-          Command
+          Dashboard
         </Link>
         <span className="text-slate-600 font-bold">/</span>
         <Link to="/admin/users" className="text-slate-500 hover:text-primary transition-colors text-[11px] font-headline font-bold uppercase tracking-widest flex items-center gap-2">
-          Directory
+          Users
         </Link>
         <span className="text-slate-600 font-bold">/</span>
         <span className="text-slate-300 font-headline font-black tracking-wide bg-surface-container px-3 py-1 rounded-lg border border-outline-variant/10">{user.username}</span>
@@ -94,14 +94,14 @@ export const AdminUserDetailPage = () => {
               <RoleBadge role={user.role} />
               <StatusBadge status={user.status} />
               <ModeBadge mode={user.mode} />
-              {user.isGuardian && <span className="text-[10px] text-tertiary bg-tertiary-container/10 border border-tertiary/20 px-3 py-1 rounded-full font-headline font-bold uppercase tracking-widest">⚡ Overseer ({user.linkedChildrenCount})</span>}
+              {user.isGuardian && <span className="text-[10px] text-tertiary bg-tertiary-container/10 border border-tertiary/20 px-3 py-1 rounded-full font-headline font-bold uppercase tracking-widest">⚡ Guardian ({user.linkedChildrenCount})</span>}
             </div>
           </div>
         </div>
         <div className="w-full md:w-auto relative z-10 shrink-0">
             <button onClick={handleForceLogout} className="btn-secondary w-full md:w-auto py-3 px-6 bg-error/10 text-error hover:bg-error hover:text-on-error border-error/20 flex justify-center items-center gap-2 font-bold tracking-widest transition-all shadow-[0_0_15px_rgba(255,180,171,0.1)] hover:shadow-[0_0_20px_rgba(255,180,171,0.3)]">
               <span className="material-symbols-outlined text-[18px]">power_off</span>
-              Sever Origin
+              Force Logout
             </button>
         </div>
       </div>
@@ -122,14 +122,14 @@ export const AdminUserDetailPage = () => {
           <div className="bg-surface-container rounded-3xl p-6 md:p-8 border border-outline-variant/5 shadow-sm space-y-0 h-fit">
             <h3 className="font-headline font-bold text-lg text-on-surface mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary">account_circle</span>
-              Node Intelligence
+              User Details
             </h3>
             {[
               ['Identifier', <span className="font-headline font-bold text-slate-300 text-[11px] bg-surface-container-highest px-3 py-1 rounded-md">{user._id}</span>],
               ['Authentication Status', user.isEmailVerified ? <span className="text-emerald-400 font-bold">Verified</span> : <span className="text-error font-bold">Unverified</span>],
               ['Access Attempts', <span className="text-primary font-bold">{user.loginAttempts}</span>],
-              ['Last Uplink', formatDateTime(user.lastLoginAt)],
-              ['Commissioned', formatDateTime(user.createdAt)],
+              ['Last Login', formatDateTime(user.lastLoginAt)],
+              ['Registered', formatDateTime(user.createdAt)],
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between items-center py-4 border-b border-outline-variant/5 last:border-0 hover:bg-surface-container-high px-2 rounded-lg transition-colors">
                 <span className="text-[11px] text-slate-500 font-headline uppercase font-bold tracking-widest">{label}</span>
@@ -142,7 +142,7 @@ export const AdminUserDetailPage = () => {
             <div className="bg-surface-container rounded-3xl p-6 md:p-8 border border-outline-variant/5 shadow-sm">
               <h3 className="font-headline font-bold text-lg text-on-surface mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-tertiary">family_restroom</span>
-                Governed Nodes
+                Managed Youth Users
               </h3>
               <div className="space-y-3">
                 {user.childLinks.map((link) => (
@@ -166,7 +166,7 @@ export const AdminUserDetailPage = () => {
           <div className="bg-surface-container rounded-3xl p-6 md:p-8 border border-outline-variant/5 shadow-sm">
             <h3 className="font-headline font-bold text-lg text-on-surface mb-6 flex items-center gap-2">
               <span className="material-symbols-outlined text-error">gavel</span>
-              Alter Operational State
+              Change Status
             </h3>
             <div className="space-y-3">
               {STATUSES.map(s => (
@@ -185,7 +185,7 @@ export const AdminUserDetailPage = () => {
           <div className="bg-surface-container rounded-3xl p-6 md:p-8 border border-outline-variant/5 shadow-sm">
             <h3 className="font-headline font-bold text-lg text-on-surface mb-6 flex items-center gap-2">
                <span className="material-symbols-outlined text-secondary">tune</span>
-               Protocol Directives
+               User Mode
             </h3>
             <div className="space-y-3">
               {MODES.map(m => (

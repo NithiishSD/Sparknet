@@ -15,25 +15,51 @@ export const MessagingPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const scrollRef = useRef();
 
-  // ── Load conversations from REST ─────────────────────────────────────────
+  // ── Load conversations and following list ────────────────────────────────
   useEffect(() => {
-    const fetchConversations = async () => {
+    const fetchConversationsAndFollowing = async () => {
+      if (!user) return;
       try {
-        const { data } = await api.get('/messaging/conversations');
-        if (data.success) setConversations(data.conversations || data.data || []);
+        setLoadingConvs(true);
+        const [convRes, followingRes] = await Promise.all([
+          api.get('/messaging/conversations').catch(() => ({ data: { conversations: [] } })),
+          api.get('/users/following').catch(() => ({ data: { following: [] } }))
+        ]);
+        
+        const convs = convRes.data?.conversations || convRes.data?.data || [];
+        const following = followingRes.data?.following || [];
+        
+        // Find existing conversation partners to avoid duplicates
+        const convUserIds = new Set();
+        convs.forEach(c => {
+           const other = c.participants?.find(p => (p._id || p) !== (user._id || user.id));
+           // If populated as object, otherwise string id
+           if (other) convUserIds.add(other._id || other);
+        });
+        
+        const ghosts = following.filter(f => !convUserIds.has(f._id)).map(f => ({
+           _id: 'ghost_' + f._id,
+           isGhost: true,
+           participants: [{_id: user._id || user.id}, f], // inject standard structure
+           lastMessage: null
+        }));
+        
+        setConversations([...convs, ...ghosts]);
       } catch (err) {
-        console.error('Failed to load conversations:', err);
+        console.error('Failed to load messaging data:', err);
       } finally {
         setLoadingConvs(false);
       }
     };
-    fetchConversations();
-  }, []);
+    fetchConversationsAndFollowing();
+  }, [user]);
 
   // ── Load full message history when selecting a conversation ──────────────
   const handleSelectConv = async (conv) => {
     setSelectedConv(conv);
     setMessages([]);
+    if (conv.isGhost) return; // No messages exist yet for ghosts
+    
     setLoadingMsgs(true);
     try {
       const { data } = await api.get(`/messaging/conversations/${conv._id}/messages`);
@@ -78,10 +104,33 @@ export const MessagingPage = () => {
     );
     const receiverId = otherParticipant?._id || otherParticipant;
 
-    socket.emit('SEND_MESSAGE', { receiverId, content, conversationId: selectedConv._id }, (response) => {
+    const payload = { receiverId, content };
+    if (!selectedConv.isGhost) payload.conversationId = selectedConv._id;
+
+    socket.emit('SEND_MESSAGE', payload, async (response) => {
       if (response?.success) {
         setMessages((prev) => [...prev, response.message]);
         setContent('');
+        // If this was a ghost, it is now an active conversation. We must update the ID globally.
+        if (selectedConv.isGhost) {
+           setSelectedConv(prev => ({ ...prev, _id: response.message.conversationId, isGhost: false }));
+           // Re-fetch to normalize list
+           try {
+             const { data } = await api.get('/messaging/conversations');
+             if (data.success) {
+                // Ensure we inject any remaining ghosts with the new real conversations
+                setConversations(prevConvs => {
+                   const active = data.conversations || [];
+                   const activeUserIds = new Set(active.map(c => {
+                      const other = c.participants?.find(p => (p._id || p) !== (user._id || user.id));
+                      return other?._id || other;
+                   }));
+                   const ghosts = prevConvs.filter(c => c.isGhost && !activeUserIds.has(c.participants[1]?._id));
+                   return [...active, ...ghosts];
+                });
+             }
+           } catch (e) {}
+        }
       } else {
         toast.error(response?.error || 'Failed to send');
       }
@@ -106,6 +155,17 @@ export const MessagingPage = () => {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-outline-variant/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (user?.role === 'admin') {
+    return (
+      <div className="flex flex-1 h-[calc(100vh-4rem)] items-center justify-center bg-background page-enter">
+         <div className="text-center">
+            <span className="material-symbols-outlined text-6xl opacity-30 mb-4 text-slate-500">lock</span>
+            <p className="font-headline tracking-widest uppercase text-sm text-slate-400">Messaging is disabled for Command units</p>
+         </div>
       </div>
     );
   }

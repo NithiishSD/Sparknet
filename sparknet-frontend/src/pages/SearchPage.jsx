@@ -80,7 +80,12 @@ export const SearchPage = () => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-headline font-bold text-slate-200 truncate group-hover:text-primary transition-colors">{user.displayName || user.username}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-headline font-bold text-slate-200 truncate group-hover:text-primary transition-colors">{user.displayName || user.username}</h3>
+                    {user.role === 'child' && (
+                      <span className="text-[9px] bg-tertiary-container/20 text-tertiary border border-tertiary/20 px-2 py-0.5 rounded-sm font-headline font-black uppercase tracking-widest leading-none">Youth</span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500 truncate">@{user.username}</p>
                 </div>
                 <span className="material-symbols-outlined text-slate-600 group-hover:text-primary group-hover:translate-x-1 transition-all">chevron_right</span>

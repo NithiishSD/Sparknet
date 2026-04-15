@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { postApi } from '../api/postApi';
 import toast from 'react-hot-toast';
 import { formatDateTime } from '../utils/helpers';
+import { profileApi } from '../api/profileApi';
 
 /* ── Post Composer ─────────────────────────────────────── */
 const Composer = ({ onPosted }) => {
@@ -86,7 +87,7 @@ const Composer = ({ onPosted }) => {
 };
 
 /* ── PostCard ───────────────────────────────────────────── */
-const PostCard = ({ post, style, onSaveToggle }) => {
+const PostCard = ({ post, style, onSaveToggle, onFollowChange }) => {
   const [liked, setLiked] = useState(post.isLikedByMe);
   const [count, setCount]  = useState(post.likesCount ?? post.likeCount ?? 0);
   const [showComments, setShowComments] = useState(false);
@@ -101,6 +102,36 @@ const PostCard = ({ post, style, onSaveToggle }) => {
   const authorName = post.authorName ?? post.user?.username ?? 'Unknown';
   const authorAvatar = post.user?.oauthAvatarUrl ?? null;
   const avatarL = authorName?.[0]?.toUpperCase() ?? '?';
+
+  const [followState, setFollowState] = useState(post.followStatus || null); // null, 'pending', 'accepted'
+  
+  useEffect(() => {
+    setFollowState(post.followStatus || null);
+  }, [post.followStatus]);
+
+  const [followingBusy, setFollowingBusy] = useState(false);
+  const { user } = useAuth();
+  
+  const handleFollowClick = async () => {
+    if (followState || followingBusy) return;
+    setFollowingBusy(true);
+    try {
+      const { data } = await profileApi.followUser(post.user?._id || post.user?.id);
+      if (data.message.includes('pending') || data.message.includes('sent to guardian')) {
+        setFollowState('pending');
+        onFollowChange?.(post.user?._id || post.user?.id, 'pending');
+        toast.success('Follow request sent to guardian');
+      } else {
+        setFollowState('accepted');
+        onFollowChange?.(post.user?._id || post.user?.id, 'accepted');
+        toast.success(`Following ${authorName}`);
+      }
+    } catch {
+      toast.error('Failed to follow user');
+    } finally {
+      setFollowingBusy(false);
+    }
+  };
 
   const toggleLike = async () => {
     const prev = liked;
@@ -183,12 +214,31 @@ const PostCard = ({ post, style, onSaveToggle }) => {
           </div>
         </div>
         
-        {/* Risk badge */}
-        {post.risk_score > 0.3 && (
-          <span className="text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full bg-error-container text-on-error-container">
-            Mod Review
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Follow Button - Admin does not need following logic */}
+          {(user?.role !== 'admin' && post.user?.role !== 'admin') && String(user?._id || user?.id) !== String(post.user?._id || post.user?.id) && (
+            <button
+              onClick={handleFollowClick}
+              disabled={!!followState || followingBusy}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold font-headline uppercase tracking-widest transition-all ${
+                followState === 'accepted' 
+                  ? 'bg-surface-container-highest text-primary border border-primary/20'
+                  : followState === 'pending'
+                  ? 'bg-surface-container-highest text-tertiary border border-tertiary/20 opacity-80'
+                  : 'bg-primary text-on-primary hover:bg-primary/90 shadow-[0_0_15px_rgba(173,198,255,0.2)]'
+              }`}
+            >
+              {followingBusy ? '...' : followState === 'accepted' ? 'Following' : followState === 'pending' ? 'Requested' : 'Follow'}
+            </button>
+          )}
+
+          {/* Risk badge */}
+          {post.risk_score > 0.3 && (
+            <span className="text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full bg-error-container text-on-error-container">
+              Mod Review
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Content */}
@@ -379,11 +429,18 @@ export const HomeFeedPage = () => {
   const [loading, setLoading] = useState(true);
   const [tab, setTab]       = useState('foryou');
 
-  const fetchFeed = async () => {
+  const fetchFeed = async (currentTab = tab) => {
     try {
       setLoading(true);
-      const { data } = await postApi.getFeed();
-      setPosts(data.posts ?? []);
+      let res;
+      if (currentTab === 'foryou') res = await postApi.getFeed();
+      else if (currentTab === 'trending') res = await postApi.getTrending();
+      else if (currentTab === 'following') res = await postApi.getFollowingFeed();
+      else if (currentTab === 'yourposts') res = await postApi.getUserPosts(user?._id || user?.id);
+      
+      if(res) {
+        setPosts(res.data.posts ?? []);
+      }
     } catch {
       toast.error('Failed to sync feed');
     } finally {
@@ -391,14 +448,33 @@ export const HomeFeedPage = () => {
     }
   };
 
-  useEffect(() => { fetchFeed(); }, []);
+  useEffect(() => { 
+    if (user && tab !== 'saved') fetchFeed(tab); 
+  }, [tab, user]);
 
-  const tabs = [
-    { id: 'foryou',    label: 'For You' },
-    { id: 'following', label: 'Following' },
-    { id: 'trending',  label: 'Trending' },
-    { id: 'saved',     label: 'Saved' },
-  ];
+  const [followStatuses, setFollowStatuses] = useState({});
+  
+  const fetchFollowStatuses = async () => {
+    try {
+      const { data } = await profileApi.getConnectionStatuses();
+      setFollowStatuses(data.statuses || {});
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleFollowChange = (userId, newStatus) => {
+    setFollowStatuses(prev => ({
+      ...prev,
+      [userId]: newStatus
+    }));
+  };
+
+  useEffect(() => { 
+    if (user) {
+      fetchFollowStatuses();
+    }
+  }, [user]);
 
   // Load saved posts when tab changes
   const [savedPosts, setSavedPosts] = useState([]);
@@ -429,7 +505,12 @@ export const HomeFeedPage = () => {
             Feed <span className="text-primary pulse-dot inline-block ml-2 mb-1 w-2 h-2 rounded-full"></span>
           </h1>
           <div className="flex bg-surface-container p-1 rounded-full border border-outline-variant/10">
-            {tabs.map(t => (
+            {[{ id: 'foryou', label: 'For You' },
+              ...(user?.role !== 'admin' ? [{ id: 'following', label: 'Following' }] : []),
+              { id: 'trending', label: 'Trending' },
+              { id: 'yourposts', label: 'Your Posts' },
+              { id: 'saved', label: 'Saved' }
+            ].map(t => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
@@ -464,7 +545,13 @@ export const HomeFeedPage = () => {
               </div>
             ) : (
               savedPosts.map((post, i) => (
-                <PostCard key={post._id ?? i} post={post} style={{ animationDelay: `${i * 50}ms` }} onSaveToggle={fetchSaved} />
+                <PostCard 
+                  key={post._id ?? i} 
+                  post={{...post, followStatus: followStatuses[post.user?._id || post.user?.id]}} 
+                  style={{ animationDelay: `${i * 50}ms` }} 
+                  onSaveToggle={fetchSaved} 
+                  onFollowChange={handleFollowChange}
+                />
               ))
             )
           ) : loading ? (
@@ -479,8 +566,9 @@ export const HomeFeedPage = () => {
             posts.map((post, i) => (
               <PostCard
                 key={post._id ?? post.id ?? i}
-                post={post}
+                post={{...post, followStatus: followStatuses[post.user?._id || post.user?.id]}}
                 style={{ animationDelay: `${i * 50}ms` }}
+                onFollowChange={handleFollowChange}
               />
             ))
           )}
@@ -525,8 +613,10 @@ export const HomeFeedPage = () => {
           <div className="space-y-3">
             {[
               { href:'/profile',     icon:'person',             label:'View Profile',    sub:'Your public page' },
-              { href:'/challenges',  icon:'workspace_premium',  label:'Challenges',        sub:'Earn more credits' },
-              { href:'/messages',    icon:'chat',               label:'Messages',    sub:'Check your messages' },
+              ...(user?.role !== 'admin' ? [
+                { href:'/challenges',  icon:'workspace_premium',  label:'Challenges',        sub:'Earn more credits' },
+                { href:'/messages',    icon:'chat',               label:'Messages',    sub:'Check your messages' }
+              ] : [])
             ].map(a => (
               <a
                 key={a.href}

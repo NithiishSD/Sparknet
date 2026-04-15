@@ -8,4 +8,9 @@ export const guardianApi = {
   setChildStatus: (childId, status) => api.patch(`/guardian/children/${childId}/status`, { status }),
   unlinkChild: (childId) => api.delete(`/guardian/children/${childId}`),
   getChildActivity: (childId) => api.get(`/guardian/children/${childId}/activity`),
+  
+  // Follow Moderation
+  getPendingFollowRequests: (childId) => api.get(`/guardian/children/${childId}/follow-requests`),
+  approveFollowRequest: (childId, requestId) => api.patch(`/guardian/children/${childId}/follow-requests/${requestId}/approve`),
+  declineFollowRequest: (childId, requestId) => api.patch(`/guardian/children/${childId}/follow-requests/${requestId}/decline`),
 };

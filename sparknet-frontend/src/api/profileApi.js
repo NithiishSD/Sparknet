@@ -16,4 +16,5 @@ export const profileApi = {
   unfollowUser: (targetId) => api.delete(`/users/follow/${targetId}`),
   getFollowers: (targetId) => api.get(`/users/${targetId}/followers`),
   getFollowing: () => api.get('/users/following'),
+  getConnectionStatuses: () => api.get('/users/connection-statuses'),
 };

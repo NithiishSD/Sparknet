@@ -48,9 +48,9 @@ export const GuardianDashboard = () => {
         <div>
           <h1 className="font-headline font-black text-4xl text-on-surface tracking-tighter flex items-center gap-3">
             <span className="material-symbols-outlined text-primary text-4xl">admin_panel_settings</span>
-            Guardian Overseer
+            Guardian Dashboard
           </h1>
-          <p className="text-slate-500 mt-2 font-medium">Monitoring {children.length} linked node{children.length !== 1 ? 's' : ''}</p>
+          <p className="text-slate-500 mt-2 font-medium">Monitoring {children.length} linked account{children.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
@@ -75,8 +75,8 @@ export const GuardianDashboard = () => {
 
       <ConfirmModal
         isOpen={!!unlinkTarget}
-        title="Unlink Child Node"
-        message={`Are you sure you want to terminate link with ${unlinkTarget?.child?.username}? The node will be suspended.`}
+        title="Unlink Child Account"
+        message={`Are you sure you want to unlink from ${unlinkTarget?.child?.username}? The account will be suspended.`}
         onConfirm={handleUnlink}
         onCancel={() => setUnlinkTarget(null)}
         danger
@@ -102,7 +102,7 @@ const ChildCard = ({ link, onUnlink, onStatusToggle }) => {
             <div className="flex flex-wrap items-center gap-3 mt-3">
               <StatusBadge status={child?.status} />
               <span className="text-[10px] bg-surface-container-highest px-3 py-1 rounded-full text-slate-400 font-headline font-bold uppercase tracking-widest border border-outline-variant/5">
-                Uplink established {formatDateTime(approvedAt)}
+                Linked on {formatDateTime(approvedAt)}
               </span>
             </div>
           </div>
@@ -115,20 +115,23 @@ const ChildCard = ({ link, onUnlink, onStatusToggle }) => {
             onClick={onStatusToggle}
             className={`py-2 px-4 rounded-xl font-headline font-bold text-[11px] uppercase tracking-widest transition-all flex-1 lg:flex-none ${child?.status === 'active' ? 'bg-error/10 text-error hover:bg-error/20 border border-error/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'}`}
           >
-            {child?.status === 'active' ? 'Halt' : 'Resume'}
+            {child?.status === 'active' ? 'Suspend' : 'Activate'}
           </button>
           <button onClick={() => setExpanded(!expanded)} className="btn-secondary py-2 flex-1 lg:flex-none">
-            {expanded ? 'Collapse' : 'Parameters'}
+            {expanded ? 'Collapse' : 'Settings'}
           </button>
           <button onClick={onUnlink} className="py-2 px-4 rounded-xl font-headline font-bold text-[11px] uppercase tracking-widest bg-error text-on-error hover:bg-red-600 transition-colors flex-1 lg:flex-none">
-             Sever
+             Unlink
           </button>
         </div>
       </div>
 
       {expanded && (
-        <div className="border-t border-outline-variant/10 p-6 md:p-8 bg-surface-container-high transition-all">
+        <div className="border-t border-outline-variant/10 p-6 md:p-8 bg-surface-container-high transition-all space-y-8">
           <ChildControls childId={child?._id} controls={controls} />
+          <div className="border-t border-outline-variant/10 pt-8 mt-8">
+            <ChildFollowRequests childId={child?._id} />
+          </div>
         </div>
       )}
     </div>
@@ -143,8 +146,8 @@ const ChildControls = ({ childId, controls: initialControls }) => {
     setSaving(true);
     try {
       await guardianApi.updateChildControls(childId, controls);
-      toast.success('Parameters updated');
-    } catch { toast.error('Failed to sync parameters'); }
+      toast.success('Changes saved');
+    } catch { toast.error('Failed to save changes'); }
     finally { setSaving(false); }
   };
 
@@ -155,11 +158,11 @@ const ChildControls = ({ childId, controls: initialControls }) => {
     <div className="space-y-6">
       <h4 className="font-headline font-bold text-xs text-primary uppercase tracking-[0.2em] flex items-center gap-2">
         <span className="material-symbols-outlined text-[16px]">settings_accessibility</span>
-        Node Access Controls
+        Account Controls
       </h4>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-        <ToggleRow label="Enable Transmissions (Messaging)" value={controls.messagingAllowed} onChange={() => toggle('messagingAllowed')} />
-        <ToggleRow label="Peer Connections (Friends)" value={controls.friendRequestsAllowed} onChange={() => toggle('friendRequestsAllowed')} />
+        <ToggleRow label="Allow Messaging" value={controls.messagingAllowed} onChange={() => toggle('messagingAllowed')} />
+        <ToggleRow label="Friend Requests & Follows" value={controls.friendRequestsAllowed} onChange={() => toggle('friendRequestsAllowed')} />
         <ToggleRow label="Enforce Time Limits" value={controls.screenTimeEnabled} onChange={() => toggle('screenTimeEnabled')} />
         
         <div className="bg-surface-container-highest p-4 rounded-2xl border border-outline-variant/10 flex flex-col justify-center">
@@ -180,7 +183,7 @@ const ChildControls = ({ childId, controls: initialControls }) => {
       </div>
       <div className="pt-2">
         <button onClick={save} disabled={saving} className="btn-primary py-3 px-6 text-sm">
-          {saving ? <><Spinner /> Synchronizing...</> : 'Deploy Parameters'}
+          {saving ? <><Spinner /> Saving...</> : 'Save Changes'}
         </button>
       </div>
     </div>
@@ -195,3 +198,78 @@ const ToggleRow = ({ label, value, onChange }) => (
     </div>
   </label>
 );
+
+const ChildFollowRequests = ({ childId }) => {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchRequests = async () => {
+    try {
+      const { data } = await guardianApi.getPendingFollowRequests(childId);
+      setRequests(data.requests || []);
+    } catch {
+      toast.error('Failed to load follow requests');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchRequests(); }, [childId]);
+
+  const handleAction = async (requestId, action) => {
+    try {
+      if (action === 'approve') {
+        await guardianApi.approveFollowRequest(childId, requestId);
+        toast.success('Request approved');
+      } else {
+        await guardianApi.declineFollowRequest(childId, requestId);
+        toast.success('Request declined');
+      }
+      setRequests(reqs => reqs.filter(r => r._id !== requestId));
+    } catch {
+      toast.error(`Failed to ${action} request`);
+    }
+  };
+
+  if (loading) return <div className="py-4"><Spinner size="sm" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <h4 className="font-headline font-bold text-xs text-primary uppercase tracking-[0.2em] flex items-center gap-2">
+        <span className="material-symbols-outlined text-[16px]">group_add</span>
+        Pending Follow Queries ({requests.length})
+      </h4>
+      {requests.length === 0 ? (
+        <p className="text-slate-500 text-sm italic">No pending follow requests.</p>
+      ) : (
+        <div className="grid gap-4">
+          {requests.map(req => (
+            <div key={req._id} className="bg-surface-container rounded-2xl p-4 flex items-center justify-between border border-outline-variant/10">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-bold text-on-surface overflow-hidden">
+                  {req.follower?.oauthAvatarUrl ? (
+                    <img src={req.follower.oauthAvatarUrl} alt={req.follower.username} className="w-full h-full object-cover" />
+                  ) : (
+                    req.follower?.username?.[0]?.toUpperCase()
+                  )}
+                </div>
+                <div>
+                  <p className="font-bold text-on-surface text-sm font-headline">{req.follower?.username}</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Role: {req.follower?.role}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => handleAction(req._id, 'decline')} className="px-4 py-1.5 rounded-full text-xs font-bold font-headline uppercase bg-surface-container-highest text-slate-300 hover:text-error hover:bg-error/10 transition-colors">
+                  Decline
+                </button>
+                <button onClick={() => handleAction(req._id, 'approve')} className="px-4 py-1.5 rounded-full text-xs font-bold font-headline uppercase bg-primary text-on-primary hover:bg-primary/90 transition-colors shadow-[0_0_10px_rgba(173,198,255,0.2)]">
+                  Approve
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};

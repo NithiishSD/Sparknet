@@ -37,7 +37,14 @@ export const ChallengesExplorerPage = () => {
             <span className="material-symbols-outlined text-primary text-4xl">emoji_events</span>
             Missions & Objectives
           </h1>
-          <p className="text-slate-500 mt-2 font-medium">Acquire new capabilities, gather credits, and ascend the ranks.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-2">
+            <p className="text-slate-500 font-medium">Acquire new capabilities, gather credits, and ascend the ranks.</p>
+            {user?.role !== 'child' && (
+              <a href="/challenges/create" className="btn-secondary py-1.5 px-4 text-[10px] font-bold uppercase tracking-widest inline-flex items-center gap-2 max-w-fit">
+                <span className="material-symbols-outlined text-[14px]">add</span> Deploy New
+              </a>
+            )}
+          </div>
         </div>
         
         <div className="flex bg-surface-container-highest rounded-2xl p-1.5 overflow-x-auto border border-outline-variant/10 shadow-inner">
@@ -62,7 +69,12 @@ export const ChallengesExplorerPage = () => {
            <p className="text-slate-400 col-span-full text-center py-10 tracking-widest font-headline uppercase font-bold text-[11px]">Loading missions...</p>
         ) : (
           filteredChallenges.map(challenge => {
-            const isJoined = challenge.participants?.some(p => p.userId?._id === user?._id || p.userId === user?._id);
+            const userIdMatches = (p) => {
+              const id1 = p.userId?._id || p.userId;
+              const id2 = user?._id || user?.id;
+              return id1 && id2 && String(id1) === String(id2);
+            };
+            const isJoined = challenge.participants?.some(userIdMatches);
             return <ChallengeCard key={challenge._id} challenge={challenge} isJoined={isJoined} />;
           })
         )}

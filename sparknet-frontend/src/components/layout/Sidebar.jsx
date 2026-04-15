@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const navItems = [
   { to: '/feed',          icon: 'rss_feed',           label: 'Feed' },
-  { to: '/messages',      icon: 'chat_bubble',        label: 'Messages' },
+  { to: '/messages',      icon: 'chat_bubble',        label: 'Messages', hideForAdmin: true },
   { to: '/challenges',    icon: 'workspace_premium',  label: 'Challenges', hideForAdmin: true },
   { to: '/notifications', icon: 'notifications',      label: 'Notifications' },
 ];

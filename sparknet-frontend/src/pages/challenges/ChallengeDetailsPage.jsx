@@ -121,7 +121,10 @@ export const ChallengeDetailsPage = () => {
                 </span>
               </div>
               <h1 className="font-headline font-black text-4xl md:text-5xl text-on-surface tracking-tighter mb-4">{challenge.title}</h1>
-              <p className="text-slate-400 max-w-2xl text-lg leading-relaxed">{challenge.description}</p>
+              <div className="mb-4">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-primary mb-1 block">Mission Objective</span>
+                <p className="text-slate-400 max-w-2xl text-lg leading-relaxed">{challenge.description}</p>
+              </div>
             </div>
             {!isJoined ? (
               <button 

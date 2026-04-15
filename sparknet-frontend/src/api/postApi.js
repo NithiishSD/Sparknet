@@ -2,6 +2,8 @@ import api from './axios';
 
 export const postApi = {
   getFeed: () => api.get('/posts/feed'),
+  getTrending: () => api.get('/posts/trending'),
+  getFollowingFeed: () => api.get('/posts/following-feed'),
   createPost: (data) => api.post('/posts/create', data),
   getPost: (id) => api.get(`/posts/${id}`),
   editPost: (id, data) => api.put(`/posts/${id}`, data),
