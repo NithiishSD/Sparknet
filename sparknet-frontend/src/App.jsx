@@ -28,6 +28,7 @@ import { NotificationsPage } from './pages/NotificationsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ChallengesExplorerPage } from './pages/challenges/ChallengesExplorerPage';
 import { ChallengeDetailsPage } from './pages/challenges/ChallengeDetailsPage';
+import { CreateChallengePage } from './pages/challenges/CreateChallengePage';
 import { MessagingPage } from './pages/MessagingPage';
 
 // Guardian pages
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/challenges" element={<ChallengesExplorerPage />} />
+          <Route path="/challenges/create" element={<CreateChallengePage />} />
           <Route path="/challenges/:id" element={<ChallengeDetailsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/:username" element={<PublicProfilePage />} />
