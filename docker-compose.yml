@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # Database Service
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  # Backend Service
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb+srv://Sparknet:Sparknet123@sparknet.mkvj5q4.mongodb.net/authdb
+      - JWT_SECRET=mynithiishappsuper
+
+  # Frontend Service
+  frontend:
+    build: ./sparknet-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:5000
+
+volumes:
+  mongo-data:

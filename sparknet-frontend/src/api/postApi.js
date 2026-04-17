@@ -4,7 +4,13 @@ export const postApi = {
   getFeed: () => api.get('/posts/feed'),
   getTrending: () => api.get('/posts/trending'),
   getFollowingFeed: () => api.get('/posts/following-feed'),
-  createPost: (data) => api.post('/posts/create', data),
+  createPost: (data) => {
+    // Check if it's FormData (for media upload)
+    const isFormData = data instanceof FormData;
+    return api.post('/posts/create', data, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {}
+    });
+  },
   getPost: (id) => api.get(`/posts/${id}`),
   editPost: (id, data) => api.put(`/posts/${id}`, data),
   deletePost: (id) => api.delete(`/posts/${id}`),
@@ -19,12 +25,12 @@ export const postApi = {
   getComments: (postId) => api.get(`/posts/${postId}/comments`),
   addComment: (postId, content) => api.post('/posts/comment', { postId, content }),
   replyToComment: (commentId, content) => api.post(`/posts/comments/${commentId}/reply`, { content }),
+  getReplies: (commentId) => api.get(`/posts/comments/${commentId}/replies`),
+  reportPost: (target_id, reason, type = 'post') => api.post('/posts/report', { target_id, type, reason }),
   deleteComment: (commentId) => api.delete(`/posts/comments/${commentId}`),
   
   // User specific
   getUserPosts: (userId) => api.get(`/posts/user/${userId}`),
   getSavedPosts: () => api.get('/posts/saved'),
-  getReplies: (commentId) => api.get(`/posts/comments/${commentId}/replies`),
   getLikes: (postId) => api.get(`/posts/${postId}/likes`),
-  reportPost: (postId, reason, category) => api.post('/posts/report', { postId, reason, category }),
 };

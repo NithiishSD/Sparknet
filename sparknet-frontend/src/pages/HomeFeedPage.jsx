@@ -11,17 +11,53 @@ const Composer = ({ onPosted }) => {
   const [content, setContent] = useState('');
   const [busy, setBusy] = useState(false);
   const [focused, setFocused] = useState(false);
+  
+  // Media & Tags
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [tags, setTags] = useState('');
+  const [showTagInput, setShowTagInput] = useState(false);
+  const fileInputRef = useRef(null);
+
   const avatarL = user?.username?.[0]?.toUpperCase() ?? '?';
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) return toast.error('Image too large (> 5MB)');
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const removeImage = () => {
+    setImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() && !image) return;
     setBusy(true);
+
     try {
-      await postApi.createPost({ content_text: content });
+      const formData = new FormData();
+      formData.append('content_text', content);
+      if (image) formData.append('media', image);
+      if (tags.trim()) {
+        const tagArray = tags.split(',').map(t => t.trim().replace('#', '')).filter(Boolean);
+        tagArray.forEach(t => formData.append('tags[]', t));
+      }
+
+      await postApi.createPost(formData);
+      
       toast.success('Posted! ⚡');
       setContent('');
+      setTags('');
+      removeImage();
       setFocused(false);
+      setShowTagInput(false);
       onPosted?.();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to post');
@@ -53,35 +89,181 @@ const Composer = ({ onPosted }) => {
           />
         </div>
 
-        {(focused || content) && (
-          <div className="flex items-center justify-between px-6 pb-6 animate-fade-in pt-2">
-            <div className="flex gap-2 text-slate-400">
-              {[['photo_camera','Photo'],['label','Tag'],['mood','Mood']].map(([icon, tip]) => (
-                <button
-                  key={tip}
+        {(focused || content || image) && (
+          <div className="px-6 pb-6 animate-fade-in space-y-4">
+            {/* Tag Input Field */}
+            {showTagInput && (
+              <div className="flex items-center gap-3 bg-surface-container-highest/50 px-4 py-2 rounded-2xl border border-outline-variant/10 animate-slide-up">
+                <span className="material-symbols-outlined text-slate-500 text-[20px]">label</span>
+                <input 
+                  type="text" 
+                  autoFocus
+                  placeholder="Add tags (comma separated)..."
+                  value={tags}
+                  onChange={e => setTags(e.target.value)}
+                  className="bg-transparent border-none focus:ring-0 text-sm flex-1 outline-none text-on-surface"
+                />
+              </div>
+            )}
+
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="relative rounded-2xl overflow-hidden border border-outline-variant/20 animate-slide-up group/img">
+                <img src={imagePreview} alt="Preview" className="w-full h-auto max-h-64 object-cover" />
+                <button 
                   type="button"
-                  title={tip}
+                  onClick={removeImage}
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-error transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex gap-2 text-slate-400">
+                <input 
+                  type="file" 
+                  hidden 
+                  ref={fileInputRef} 
+                  accept="image/*" 
+                  onChange={handleImageChange} 
+                />
+                
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Add Photo"
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors focus:outline-none ${image ? 'bg-primary/20 text-primary' : 'hover:bg-surface-container-highest hover:text-primary'}`}
+                >
+                  <span className="material-symbols-outlined">photo_camera</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowTagInput(!showTagInput)}
+                  title="Add Tags"
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors focus:outline-none ${tags ? 'bg-primary/20 text-primary' : 'hover:bg-surface-container-highest hover:text-primary'}`}
+                >
+                  <span className="material-symbols-outlined">label</span>
+                </button>
+
+                <button
+                  type="button"
+                  title="Mood"
+                  onClick={() => setContent(c => c + ' 😊')}
                   className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-highest hover:text-primary transition-colors focus:outline-none"
                 >
-                  <span className="material-symbols-outlined">{icon}</span>
+                  <span className="material-symbols-outlined">mood</span>
                 </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-4">
-              <span className={`text-xs font-headline ${content.length > 1800 ? 'text-error' : 'text-slate-500'}`}>
-                {2000 - content.length} chars
-              </span>
-              <button
-                type="submit"
-                disabled={!content.trim() || busy}
-                className="btn-primary py-2 px-6 disabled:opacity-40"
-              >
-                {busy ? 'Processing...' : 'Post'}
-              </button>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <span className={`text-xs font-headline ${content.length > 1800 ? 'text-error' : 'text-slate-500'}`}>
+                  {2000 - content.length} chars
+                </span>
+                <button
+                  type="submit"
+                  disabled={(!content.trim() && !image) || busy}
+                  className="btn-primary py-2 px-6 disabled:opacity-40"
+                >
+                  {busy ? 'Processing...' : 'Post'}
+                </button>
+              </div>
             </div>
           </div>
         )}
       </form>
+    </div>
+  );
+};
+
+/* ── CommentItem ─────────────────────────────────────────── */
+const CommentItem = ({ comment, onReply, depth = 0 }) => {
+  const [showReplyInput, setShowReplyInput] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [showReplies, setShowReplies] = useState(false);
+  const replies = comment.replies || [];
+
+  const handleReplySubmit = (e) => {
+    e.preventDefault();
+    if (!replyText.trim()) return;
+    onReply(comment._id, replyText);
+    setReplyText('');
+    setShowReplyInput(false);
+    setShowReplies(true);
+  };
+
+  return (
+    <div className={`space-y-3 ${depth > 0 ? 'ml-8 mt-2 border-l-2 border-outline-variant/10 pl-4' : ''}`}>
+      <div className="flex gap-4 animate-slide-up">
+        <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center shrink-0 text-xs font-bold font-headline text-slate-300">
+          {comment.authorName?.[0]?.toUpperCase() ?? '?'}
+        </div>
+        <div className="flex-1 bg-surface-container rounded-2xl rounded-tl-none p-4">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-primary font-headline">
+                {comment.authorName}
+              </span>
+              <span className="text-[10px] text-slate-500 font-headline uppercase leading-none">
+                {formatDateTime(comment.createdAt)}
+              </span>
+            </div>
+          </div>
+          <p className="text-sm text-slate-300 leading-relaxed mb-3">
+            {comment.content}
+          </p>
+          
+          <div className="flex items-center gap-4">
+            {depth === 0 && (
+              <button 
+                onClick={() => setShowReplyInput(!showReplyInput)}
+                className="text-[10px] uppercase tracking-widest font-bold text-slate-500 hover:text-primary transition-colors flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-xs">reply</span>
+                {showReplyInput ? 'Cancel' : 'Reply'}
+              </button>
+            )}
+            
+            {replies.length > 0 && depth === 0 && (
+              <button 
+                onClick={() => setShowReplies(!showReplies)}
+                className="text-[10px] uppercase tracking-widest font-bold text-tertiary-fixed hover:text-tertiary transition-colors flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-xs">
+                  {showReplies ? 'expand_less' : 'expand_more'}
+                </span>
+                {showReplies ? 'Hide' : `Show ${replies.length}`} Replies
+              </button>
+            )}
+          </div>
+
+          {showReplyInput && (
+            <form onSubmit={handleReplySubmit} className="mt-4 flex gap-2">
+              <input
+                type="text"
+                autoFocus
+                value={replyText}
+                onChange={e => setReplyText(e.target.value)}
+                placeholder="Reply to this comment..."
+                className="input-base flex-1 !text-xs !py-1.5 !bg-surface-container-lowest"
+              />
+              <button 
+                type="submit" 
+                disabled={!replyText.trim()}
+                className="btn-primary !py-1 !px-3 !text-[10px] !rounded-lg"
+              >
+                Send
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+
+      {showReplies && replies.map(reply => (
+        <CommentItem key={reply._id} comment={reply} onReply={onReply} depth={depth + 1} />
+      ))}
     </div>
   );
 };
@@ -111,6 +293,7 @@ const PostCard = ({ post, style, onSaveToggle, onFollowChange }) => {
 
   const [followingBusy, setFollowingBusy] = useState(false);
   const { user } = useAuth();
+  const isOwner = String(user?._id || user?.id) === String(post.user?._id || post.user?.id);
   
   const handleFollowClick = async () => {
     if (followState || followingBusy) return;
@@ -156,6 +339,21 @@ const PostCard = ({ post, style, onSaveToggle, onFollowChange }) => {
         setNewComment('');
       }
     } catch { toast.error('Failed to post comment'); }
+  };
+
+  const handleReplyComment = async (commentId, content) => {
+    try {
+      const { data } = await postApi.replyToComment(commentId, content);
+      if (data.success) {
+        // Find parent comment and append reply locally
+        setComments(prev => prev.map(c => {
+          if (c._id === commentId) {
+            return { ...c, replies: [data.comment, ...(c.replies || [])] };
+          }
+          return c;
+        }));
+      }
+    } catch { toast.error('Failed to post reply'); }
   };
 
   const toggleSave = async () => {
@@ -249,11 +447,22 @@ const PostCard = ({ post, style, onSaveToggle, onFollowChange }) => {
 
         {post.media_url && (
           <div className="mt-4 rounded-2xl overflow-hidden border border-outline-variant/10">
-            <img
-              src={post.media_url}
-              alt="Post media"
-              className="w-full h-auto object-cover max-h-[500px] hover:scale-[1.02] transition-transform duration-500"
-            />
+            {post.media_url.match(/\.(mp4|webm|ogg)$|pexels/i) ? (
+              <video
+                src={post.media_url}
+                controls
+                className="w-full h-auto max-h-[500px] bg-black"
+                poster="/video-placeholder.jpg"
+              >
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <img
+                src={post.media_url}
+                alt="Post media"
+                className="w-full h-auto object-cover max-h-[500px] hover:scale-[1.02] transition-transform duration-500"
+              />
+            )}
           </div>
         )}
 
@@ -270,26 +479,43 @@ const PostCard = ({ post, style, onSaveToggle, onFollowChange }) => {
 
       {/* Actions */}
       <div className="flex items-center gap-2 px-4 py-3 bg-surface-container-low">
-        {/* Like */}
-        <button
-          onClick={toggleLike}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 outline-none ${
-            liked ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200 hover:bg-surface-container-highest'
-          }`}
-        >
-          <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
-          {count > 0 && <span className="font-headline">{count}</span>}
-        </button>
+        {isOwner ? (
+          // Owner sees stats, not action buttons
+          <div className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-bold bg-primary/5 text-primary/80">
+            <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+            <span className="font-headline tracking-tighter">
+              {count} {count === 1 ? 'Like' : 'Likes'}
+            </span>
+          </div>
+        ) : (
+          <button
+            onClick={toggleLike}
+            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 outline-none ${
+              liked 
+                ? 'bg-primary/15 text-primary shadow-[0_4px_12px_rgba(173,198,255,0.2)]' 
+                : 'text-slate-400 hover:text-slate-200 hover:bg-surface-container-highest hover:shadow-lg'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+            <span className="font-headline tracking-tighter decoration-0">
+              {count > 0 ? count : ''} Like
+            </span>
+          </button>
+        )}
 
         {/* Comment */}
         <button
           onClick={() => setShowComments(s => !s)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 outline-none ${
-            showComments ? 'bg-tertiary-container/50 text-on-tertiary-container' : 'text-slate-400 hover:text-slate-200 hover:bg-surface-container-highest'
+          className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 outline-none ${
+            showComments 
+              ? 'bg-tertiary/15 text-tertiary shadow-[0_4px_12px_rgba(255,218,102,0.2)]' 
+              : 'text-slate-400 hover:text-slate-200 hover:bg-surface-container-highest hover:shadow-lg'
           }`}
         >
-          <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: showComments ? "'FILL' 1" : "'FILL' 0" }}>chat_bubble</span>
-          {(post.commentCount ?? 0) > 0 && <span className="font-headline">{post.commentCount ?? 0}</span>}
+          <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: showComments ? "'FILL' 1" : "'FILL' 0" }}>chat_bubble</span>
+          <span className="font-headline tracking-tighter">
+            {(post.commentCount ?? 0) > 0 ? post.commentCount : ''} Comment
+          </span>
         </button>
 
         {/* Save */}
@@ -303,14 +529,21 @@ const PostCard = ({ post, style, onSaveToggle, onFollowChange }) => {
           <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: saved ? "'FILL' 1" : "'FILL' 0" }}>bookmark</span>
         </button>
 
-        {/* Report */}
-        <button
-          onClick={() => setShowReport(true)}
-          className="flex items-center gap-2 px-3 py-2 rounded-full text-slate-600 hover:text-error hover:bg-error/10 transition-all duration-200 outline-none"
-          title="Report post"
-        >
-          <span className="material-symbols-outlined text-[18px]">flag</span>
-        </button>
+        {/* Report / Report Count */}
+        {isOwner ? (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-full text-error/60 font-bold text-xs" title="Total reports received">
+            <span className="material-symbols-outlined text-[18px]">flag</span>
+            <span>{post.reportCount || 0}</span>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowReport(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-full text-slate-600 hover:text-error hover:bg-error/10 transition-all duration-200 outline-none"
+            title="Report post"
+          >
+            <span className="material-symbols-outlined text-[18px]">flag</span>
+          </button>
+        )}
       </div>
 
       {/* Report Modal */}
@@ -375,26 +608,13 @@ const PostCard = ({ post, style, onSaveToggle, onFollowChange }) => {
           </form>
 
           {comments.length > 0 && (
-            <div className="space-y-4 mt-6">
+            <div className="space-y-6 mt-8">
               {comments.map((c, i) => (
-                <div key={c._id ?? i} className="flex gap-4 animate-slide-up">
-                  <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center shrink-0 text-xs font-bold font-headline text-slate-300">
-                    {c.authorName?.[0]?.toUpperCase() ?? '?'}
-                  </div>
-                  <div className="flex-1 bg-surface-container rounded-2xl rounded-tl-none p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-sm text-primary font-headline">
-                        {c.authorName}
-                      </span>
-                      <span className="text-[10px] text-slate-500 font-headline uppercase">
-                        {formatDateTime(c.createdAt)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      {c.content}
-                    </p>
-                  </div>
-                </div>
+                <CommentItem 
+                  key={c._id ?? i} 
+                  comment={c} 
+                  onReply={handleReplyComment} 
+                />
               ))}
             </div>
           )}
