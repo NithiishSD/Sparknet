@@ -40,7 +40,7 @@ export const ChallengeCard = ({ challenge, isJoined }) => (
       </div>
       
       {/* Heading with fix for overflow */}
-      <h3 className="font-headline font-black text-2xl text-on-surface mb-3 tracking-tighter leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+      <h3 className="font-headline font-black text-2xl text-on-surface mb-3 tracking-tighter leading-tight group-hover:text-primary transition-colors pr-2">
         {challenge.title}
       </h3>
       
